@@ -88,6 +88,7 @@ const paths = {
   close: <path d="M6 6l12 12M18 6 6 18" />,
   arrowRight: <path d="M5 12h14m-5-5 5 5-5 5" />,
   arrowLeft: <path d="M19 12H5m5-5-5 5 5 5" />,
+  external: <path d="M7 17 17 7M9 7h8v8" />,
   home: <path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z" />,
   book: (
     <>

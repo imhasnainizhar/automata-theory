@@ -8,6 +8,8 @@ export function GitHubButton({ stars, size = 'md', label = 'GitHub' }: { stars: 
     <a className={cls} href={site.repoUrl} target="_blank" rel="noreferrer" aria-label={`${label} — ${stars ?? 'view'} stars`}>
       <Icon name="github" />
       <span>{label}</span>
+      <Icon name="external" className="ext" />
+
       {stars !== null && (
         <span className="star-count" title={`${stars} stars on GitHub`}>
           <Icon name="star" />
