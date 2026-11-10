@@ -35,10 +35,16 @@ const cases: [string, MachineSpec, string[], number, (w: string) => boolean][] =
   ['tm0n1n', S.tm0n1n, ['0', '1'], 8, (w) => /^0*1*$/.test(w) && count(w, '0') === count(w, '1')],
   ['tmLooper', S.tmLooper, ['0', '1'], 6, (w) => /^0*$/.test(w)],
   ['ntmGuess', S.ntmGuess, ['0', '1'], 8, (w) => w.includes('11') || w.endsWith('0')],
+  ['thompsonFinal', S.thompsonFinal, ['a', 'b'], 9, (w) => w.endsWith('a')],
 ];
 
 let failures = 0;
+for (const [name, list] of [['thompsonStages', S.thompsonStages], ['eliminationStages', S.eliminationStages], ['pieces', [S.tSymbol, S.tUnion, S.tConcat, S.tStar]]] as const) {
+  list.forEach((sp, i) => { for (const [f, t] of sp.edges) if (!sp.states[f] || !sp.states[t]) { console.log(`✗ ${name}[${i}]: undeclared ${f}→${t}`); failures++; } layout(sp); });
+  console.log(`✓ ${name} (${list.length} diagrams)`);
+}
 for (const [name, spec, sigma, n, want] of cases) {
+  if (spec.kind === 'static') continue;
   // every edge must reference declared states
   for (const [f, t] of spec.edges) if (!spec.states[f] || !spec.states[t]) { console.log(`✗ ${name}: undeclared state in edge ${f}→${t}`); failures++; }
   layout(spec);

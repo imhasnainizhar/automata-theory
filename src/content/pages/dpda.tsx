@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ChapterShell } from '@/components/content/ChapterShell';
+import { KeyTerms, Primer } from '@/components/content/Primer';
 import { Note, Section, Table } from '@/components/content/Blocks';
 import { M, MB } from '@/components/content/Math';
 import { Exercise } from '@/components/content/Exercise';
@@ -16,6 +17,52 @@ export default function DPDA() {
       lede="Give a finite automaton a stack (unbounded memory that you can only use at the top) and it can match nested structure. Make it deterministic and you have the machine inside every practical parser."
       chips={[{ text: 'Deterministic context-free', tone: 'ochre' }, { text: 'Deterministic', tone: 'teal' }, { text: '50 min' }]}
     >
+      <Primer
+        analogy={<>Reading a book of nested quotes, you put a bookmark in each time a new quote opens and take the top one out when it closes. If you run out of bookmarks too early, or have some left at the end, something is unbalanced.</>}
+      >
+        <p>Finite machines cannot count without limit, so they fail at things like matching brackets <code>(()(()))</code>. A <strong>pushdown automaton</strong> fixes that by adding a <strong>stack</strong>: an unlimited pile of plates where only the top plate is visible.</p>
+        <p>The <strong>deterministic</strong> version never guesses: at every moment there is at most one thing to do. That makes it fast and predictable, which is why real programming-language parsers are built on it.</p>
+      </Primer>
+      <KeyTerms
+        terms={[
+          {
+            term: 'PDA',
+            plain: 'Pushdown automaton: a finite machine plus one stack.',
+            more: <><p>“Pushdown” refers to the stack: pushing a plate pushes the others down. The machine’s moves depend on its state, the next input symbol and the top of the stack.</p></>,
+          },
+          {
+            term: 'DPDA',
+            plain: 'A PDA that never has a choice.',
+            more: <><p>In every situation at most one move applies, counting ε-moves too. That restriction makes it strictly weaker than a general (nondeterministic) PDA.</p></>,
+          },
+          {
+            term: 'Push / pop',
+            plain: 'Put on top / take off the top.',
+            more: <><p>A transition <code>a, X → Y</code> reads <M t="a" />, pops <M t="X" /> off the top, then pushes <M t="Y" />. Writing ε for <M t="X" /> means “do not pop”; ε for <M t="Y" /> means “do not push”.</p></>,
+          },
+          {
+            term: <><M t="\Gamma" /> (gamma), stack alphabet</>,
+            plain: 'The symbols that may sit on the stack.',
+            more: <><p>It can differ from the input alphabet. Often it contains the input symbols plus a special bottom marker.</p></>,
+          },
+          {
+            term: '⊥, bottom marker',
+            plain: 'A special plate pushed first to mark the bottom.',
+            more: <><p>When ⊥ is on top, the stack is otherwise empty. The machine can then check “has everything been matched?”.</p></>,
+          },
+          {
+            term: 'Configuration',
+            plain: 'A full snapshot: state, input left, stack.',
+            more: <><p>Written <M t="(q, w, \gamma)" />. A run is a sequence of configurations, each following from the previous by one move (written <M t="\vdash" />).</p></>,
+          },
+          {
+            term: 'LL(1) parser',
+            plain: 'A top-down parser that looks one token ahead.',
+            more: <><p>Its stack holds what it still expects to see; a table tells it which grammar rule to use from the stack top and the next token. It is a DPDA in practice.</p></>,
+          },
+        ]}
+      />
+
       <Section id="intuition" n={1} title="Intuition" sub="What problem does this machine solve?">
         <p>
           Finite automata cannot count, so they cannot match brackets, <code>begin</code>/<code>end</code> pairs, or expressions inside expressions. All of these share one shape: <strong>nesting</strong>. Whatever was opened most recently must be closed first.

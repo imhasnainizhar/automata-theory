@@ -140,7 +140,7 @@ export function PDASim({
       <StateDiagram spec={spec} active={active} hot={hot} />
       <InputBar value={w} onChange={(v) => { setW(v); st.restart(); }} onEnter={st.toggle} presets={presets} />
       <Transport s={st} stepWord={mode === 'branch' ? 'move' : 'symbol'} />
-      <div className="tape">
+      <div className="tape" data-scroll="x">
         {w.length === 0 && <span className="cell next">ε</span>}
         {[...w].map((c, i) => (
           <span key={i} className={`cell${i < pos ? ' done' : i === pos ? ' next' : ''}`}>{c}</span>

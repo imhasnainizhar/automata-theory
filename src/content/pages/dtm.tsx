@@ -1,4 +1,5 @@
 import { ChapterShell } from '@/components/content/ChapterShell';
+import { KeyTerms, Primer } from '@/components/content/Primer';
 import { Note, Section, Table } from '@/components/content/Blocks';
 import { M, MB } from '@/components/content/Math';
 import { Exercise } from '@/components/content/Exercise';
@@ -13,6 +14,52 @@ export default function DTM() {
       lede="Remove the fences. A finite rulebook with an endless tape it can read and rewrite captures every algorithm anyone has ever written, and it is the first machine whose behaviour we cannot always predict."
       chips={[{ text: 'Type 0 · Recursively enumerable', tone: 'clay' }, { text: 'Deterministic', tone: 'teal' }, { text: '55 min' }]}
     >
+      <Primer
+        analogy={<>A clerk with a rulebook, a pencil, an eraser and an endless roll of paper, who follows the rules one tiny step at a time and never improvises.</>}
+      >
+        <p>A <strong>Turing machine</strong> is a finite rulebook plus an <strong>endless tape</strong> it can read, write and move along in both directions. That simple setup turns out to be able to run <em>every</em> algorithm ever invented. Your laptop is no more powerful, only faster.</p>
+        <p>With that power comes a new possibility: a Turing machine might <strong>run forever</strong>. And some questions about programs, like “will this one ever stop?”, can provably never be answered by any algorithm.</p>
+      </Primer>
+      <KeyTerms
+        terms={[
+          {
+            term: 'Turing machine (TM)',
+            plain: 'A finite control plus an unbounded read/write tape.',
+            more: <><p>Invented by Alan Turing in 1936 to capture what “computable” means. Each step: read a cell, write a symbol, move left or right, change state.</p></>,
+          },
+          {
+            term: 'Blank (␣)',
+            plain: 'The symbol in every tape cell not yet used.',
+            more: <><p>The tape is infinite, but only finitely many cells are ever non-blank. Reading a blank tells the machine it has gone past the input.</p></>,
+          },
+          {
+            term: 'Halt',
+            plain: 'Stop running, in the accept or reject state.',
+            more: <><p>Finite automata always stop when the input ends; Turing machines stop only when they reach a halting state, which may never happen.</p></>,
+          },
+          {
+            term: 'Recognise vs. decide',
+            plain: 'Recognise: say yes to members. Decide: also always say no to non-members.',
+            more: <><p>A <strong>recogniser</strong> accepts exactly the right strings but may loop forever on others. A <strong>decider</strong> always halts with a correct answer. Some problems have recognisers but no deciders.</p></>,
+          },
+          {
+            term: 'Church–Turing thesis',
+            plain: 'Anything computable by an algorithm is computable by a Turing machine.',
+            more: <><p>Not a theorem but a well-tested belief: every model of computation anyone has proposed turned out to be equivalent. It lets us say “no algorithm can do this”.</p></>,
+          },
+          {
+            term: 'Halting problem',
+            plain: 'Deciding whether a program halts on an input.',
+            more: <><p>Turing proved no algorithm can do this for all programs, using a self-referencing paradox program. It is the first and most famous undecidable problem.</p></>,
+          },
+          {
+            term: 'Universal Turing machine',
+            plain: 'A TM that can simulate any other TM given its description.',
+            more: <><p>Programs are data. This is the idea behind every computer, interpreter and virtual machine.</p></>,
+          },
+        ]}
+      />
+
       <Section id="intuition" n={1} title="Intuition" sub="What problem does this machine solve?">
         <p>
           In 1936 Alan Turing asked: what can a human “computer” (a clerk following rules with pencil and paper) do in principle? The clerk sees one square of paper at a time, is in one of finitely many states of mind, and follows rules like <em>“in state q, seeing a: write b, move left, switch to state r”</em>. Give them unlimited paper and nothing else.

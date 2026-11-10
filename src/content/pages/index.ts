@@ -4,6 +4,7 @@ import Foundations from './foundations';
 import Intuition from './intuition';
 import DFA from './dfa';
 import NFA from './nfa';
+import Regex from './regex';
 import DPDA from './dpda';
 import NPDA from './npda';
 import LBA from './lba';
@@ -17,6 +18,7 @@ export const CHAPTER_CONTENT: Record<string, ComponentType> = {
   intuition: Intuition,
   dfa: DFA,
   nfa: NFA,
+  regex: Regex,
   dpda: DPDA,
   npda: NPDA,
   lba: LBA,

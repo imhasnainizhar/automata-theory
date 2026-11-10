@@ -1,4 +1,5 @@
 import { ChapterShell } from '@/components/content/ChapterShell';
+import { KeyTerms, Primer } from '@/components/content/Primer';
 import { Note, Section, Table } from '@/components/content/Blocks';
 import { M } from '@/components/content/Math';
 import { FASim } from '@/components/machines/FASim';
@@ -12,6 +13,52 @@ export default function Introduction() {
       lede="Automata theory asks a simple question with deep answers: what can a machine compute, given a particular kind of memory? This chapter gives you the whole map before we start walking it."
       chips={[{ text: '15 min read', tone: 'moss' }, { text: 'No prerequisites' }]}
     >
+      <Primer
+        analogy={<>A heating thermostat clicks between “heating” and “idle” depending on the temperature it reads. It never remembers last week’s weather, only what mode it is in now. That is an automaton.</>}
+      >
+        <p>An <strong>automaton</strong> is an imaginary machine that reads something, one piece at a time, and answers <em>yes</em> or <em>no</em>. That is all it does.</p>
+        <p>Computer scientists study these toy machines because they are simple enough to <em>prove</em> things about, and those proofs tell us what <em>any</em> computer can and cannot do. The main lesson of the course is: <strong>the more a machine can remember, the more problems it can solve</strong>, but some problems stay out of reach for every machine.</p>
+      </Primer>
+      <KeyTerms
+        terms={[
+          {
+            term: 'Automaton',
+            plain: 'An idealised machine that reads input and answers yes or no.',
+            more: <><p>Plural <em>automata</em>. It has a fixed set of rules and sometimes some memory. It is “idealised” because we ignore real-world details like speed, electricity or bugs and keep only the logic.</p></>,
+          },
+          {
+            term: 'State',
+            plain: 'What the machine is “thinking” right now.',
+            more: <><p>A state is a summary of everything about the past that still matters. A turnstile only needs “locked” or “open”; it does not need to remember who paid. Choosing good states is the core skill of this course.</p></>,
+          },
+          {
+            term: 'Transition',
+            plain: 'A rule for moving from one state to another.',
+            more: <><p>Written as an arrow in diagrams: “in state <em>Locked</em>, if a coin arrives, go to <em>Open</em>”. Transitions are triggered by the input symbol being read.</p></>,
+          },
+          {
+            term: 'Input',
+            plain: 'The text the machine reads, one symbol at a time.',
+            more: <><p>Usually a short string like <code>0110</code> or <code>(())</code>. The machine reads it left to right; most of our machines can never go back.</p></>,
+          },
+          {
+            term: 'Accept / reject',
+            plain: 'The machine’s final yes or no answer.',
+            more: <><p>Some states are marked <strong>accepting</strong> (drawn with a double circle). If the machine ends in one after reading everything, the answer is yes; otherwise no.</p></>,
+          },
+          {
+            term: 'Deterministic',
+            plain: 'Never has a choice: exactly one next move.',
+            more: <><p>Given the current state and the next symbol, a deterministic machine has exactly one thing to do. Its behaviour is completely predictable. The opposite is <em>nondeterministic</em>.</p></>,
+          },
+          {
+            term: 'Nondeterministic',
+            plain: 'Allowed to guess, or to try several options at once.',
+            more: <><p>A nondeterministic machine may have several possible moves. It says yes if <em>any</em> sequence of choices leads to yes. It is a thinking tool, not randomness. Real computers simulate it by trying all options.</p></>,
+          },
+        ]}
+      />
+
       <Section id="what-is-an-automaton" n={1} title="What is an automaton?">
         <p>
           An <strong>automaton</strong> (plural <em>automata</em>) is an idealised machine. It reads an input one symbol at a time, changes its internal situation according to fixed rules, and at the end answers <strong>yes</strong> or <strong>no</strong>. That is all.

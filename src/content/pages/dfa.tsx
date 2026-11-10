@@ -1,4 +1,5 @@
 import { ChapterShell } from '@/components/content/ChapterShell';
+import { KeyTerms, Primer } from '@/components/content/Primer';
 import { Note, Section, Table } from '@/components/content/Blocks';
 import { M, MB } from '@/components/content/Math';
 import { Exercise } from '@/components/content/Exercise';
@@ -17,6 +18,52 @@ export default function DFA() {
       lede="The simplest useful machine: a finite set of states, and exactly one move for every symbol. Designing one comes down to a single question: what must I remember?"
       chips={[{ text: 'Type 3 · Regular', tone: 'moss' }, { text: 'Deterministic', tone: 'teal' }, { text: '45 min' }]}
     >
+      <Primer
+        analogy={<>A checklist with one box ticked at a time: each new letter tells you which box to tick next, and some boxes mean “yes”.</>}
+      >
+        <p>A <strong>DFA</strong> is the simplest useful machine. It reads a string once, from left to right, and always knows exactly what to do next. Its memory is just one of a handful of <em>states</em>, fixed in advance and never growing.</p>
+        <p>Designing one is a puzzle: <strong>what is the smallest thing I need to remember about what I have read so far?</strong> To check whether a binary number is divisible by 3, you do not need the number, only its remainder (0, 1 or 2). So three states are enough, however long the number is.</p>
+      </Primer>
+      <KeyTerms
+        terms={[
+          {
+            term: 'DFA',
+            plain: 'Deterministic Finite Automaton: a finite-state machine with no choices.',
+            more: <><p><strong>Deterministic</strong>: one next move. <strong>Finite</strong>: a fixed number of states. <strong>Automaton</strong>: a machine. Together, a machine with limited, fixed memory that always knows what to do.</p></>,
+          },
+          {
+            term: <><M t="\delta" /> (delta), transition function</>,
+            plain: 'The rulebook: (state, symbol) → next state.',
+            more: <><p>Written <M t="\delta(q, a) = p" />: “in state <M t="q" />, reading <M t="a" />, go to <M t="p" />”. For a DFA it must give an answer for <em>every</em> state and symbol.</p></>,
+          },
+          {
+            term: <><M t="q_0" />, start state</>,
+            plain: 'Where every run begins.',
+            more: <><p>Drawn with an arrow coming from nowhere. Before any input is read, the machine is here.</p></>,
+          },
+          {
+            term: <><M t="F" />, accepting states</>,
+            plain: 'The “yes” states (double circles).',
+            more: <><p>If the machine finishes reading in one of these, the string is accepted. A machine can have several accepting states, or even none (then it accepts nothing).</p></>,
+          },
+          {
+            term: 'Run',
+            plain: 'The sequence of states visited while reading a string.',
+            more: <><p>For a DFA there is exactly one run per input, which is what “deterministic” buys you.</p></>,
+          },
+          {
+            term: 'Regular language',
+            plain: 'Any language some DFA can recognise.',
+            more: <><p>These are exactly the patterns that need only bounded memory: “ends in 01”, “even number of 0s”, valid identifiers. Things that need counting without limit, like <M t="a^nb^n" />, are not regular.</p></>,
+          },
+          {
+            term: 'Pumping lemma',
+            plain: 'A tool to prove a language is NOT regular.',
+            more: <><p>Long inputs force a DFA to repeat a state, which creates a loop the machine cannot count. If repeating that loop (“pumping”) breaks membership in the language, no DFA could have recognised it.</p></>,
+          },
+        ]}
+      />
+
       <Section id="intuition" n={1} title="Intuition" sub="What problem does this machine solve?">
         <p>
           A DFA answers yes/no questions about a string while reading it <strong>once</strong>, left to right, with a <strong>fixed amount of memory</strong> that does not grow with the input. Is this binary number divisible by 3? Does this word end in “ing”? Is this a valid identifier?

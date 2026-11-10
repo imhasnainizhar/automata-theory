@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ChapterShell } from '@/components/content/ChapterShell';
+import { KeyTerms, Primer } from '@/components/content/Primer';
 import { Note, Section, Table } from '@/components/content/Blocks';
 import { M } from '@/components/content/Math';
 import { ChomskyExplorer } from '@/components/widgets/ChomskyExplorer';
@@ -11,6 +12,42 @@ export default function BigPicture() {
       lede="All four machines side by side: what each one recognises, where guessing helps, which questions about them can be answered, and where to go next."
       chips={[{ text: 'Summary', tone: 'moss' }, { text: '20 min' }]}
     >
+      <Primer
+        analogy={<>A set of nesting dolls: each machine fits inside the next, more capable one, and the biggest doll still cannot hold everything.</>}
+      >
+        <p>You have now met all four machine families. This chapter lines them up side by side: what each can recognise, where guessing helps, which questions about them can be answered, and how all this leads into the study of <em>efficient</em> computation.</p>
+        <p>The pattern to take away: <strong>more memory gives more power, and more power means fewer questions you can answer about the machine itself.</strong></p>
+      </Primer>
+      <KeyTerms
+        terms={[
+          {
+            term: 'Chomsky hierarchy',
+            plain: 'Four nested classes of languages, from regular to recursively enumerable.',
+            more: <><p>Type 3 (regular) ⊂ Type 2 (context-free) ⊂ Type 1 (context-sensitive) ⊂ Type 0 (recursively enumerable). Each class matches one machine and one grammar style.</p></>,
+          },
+          {
+            term: 'Recursively enumerable (RE)',
+            plain: 'Languages some Turing machine recognises.',
+            more: <><p>“Enumerable” because a machine can list all members one by one. Some RE languages are not decidable: the machine says yes to members but may loop on non-members.</p></>,
+          },
+          {
+            term: 'Decidable',
+            plain: 'An algorithm always halts with the right answer.',
+            more: <><p>Decidable ⊂ RE. A language is decidable exactly when both it and its complement are recognisable.</p></>,
+          },
+          {
+            term: 'Closure property',
+            plain: 'An operation that never takes you out of a class.',
+            more: <><p>Regular languages are closed under intersection; context-free languages are not. Closure properties are a quick way to show a language belongs, or does not belong, to a class.</p></>,
+          },
+          {
+            term: 'Principle of least power',
+            plain: 'Use the weakest tool that does the job.',
+            more: <><p>Weaker formalisms (regexes, grammars) can be analysed and checked; a general program cannot. That is why config files and validators often avoid full programming languages.</p></>,
+          },
+        ]}
+      />
+
       <Section id="hierarchy-map" n={1} title="The hierarchy, assembled">
         <ChomskyExplorer />
         <Table>

@@ -10,13 +10,13 @@
 | Group | Chapters |
 |---|---|
 | Begin | Introduction · Formal Languages & Foundations · Automata Intuition (including a CPU control-unit walkthrough) |
-| Finite Automata | Deterministic (DFA) · Nondeterministic (NFA) |
+| Finite Automata | Deterministic (DFA) · Nondeterministic (NFA) · Regular Expressions & Kleene’s Theorem (conversions, Thompson’s construction, state elimination) |
 | Pushdown Automata | Deterministic (DPDA) · Nondeterministic (NPDA) |
 | Linear Bounded Automata | LBA (deterministic and nondeterministic) |
 | Turing Machines | Deterministic (DTM) · Nondeterministic (NTM) |
 | Synthesis | The Big Picture: hierarchy, determinism compared, decidability, complexity |
 
-Every machine chapter follows the same eight-part template:
+Every chapter opens with a plain-words introduction and an expandable glossary of the terms beginners find hardest. Every machine chapter then follows the same eight-part template:
 
 1. **Intuition**: what problem does this machine solve?
 2. **Visual machine**: interactive states, transitions and inputs.

@@ -8,6 +8,7 @@ import { ChapterNav } from './ChapterNav';
 import { GitHubButton } from './GitHubButton';
 import { Icon } from './Icon';
 import { Dock, mobileDockWidth, type DockItem } from './Dock';
+import { lockPageScroll } from './Scrollbars';
 import { CHAPTERS, chapterIndex } from '@/content/chapters';
 import { site } from '@/lib/site';
 
@@ -48,11 +49,10 @@ export function SiteChrome({ stars }: { stars: number | null }) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    lockPageScroll(true);
     window.addEventListener('keydown', onKey);
     return () => {
-      document.body.style.overflow = prev;
+      lockPageScroll(false);
       window.removeEventListener('keydown', onKey);
     };
   }, [open]);
@@ -170,6 +170,7 @@ export function SiteChrome({ stars }: { stars: number | null }) {
       <div className={`sheet-scrim${open ? ' open' : ''}`} onClick={() => setOpen(false)} />
       <div
         className={`sheet${open ? ' open' : ''}`}
+        data-scroll="y"
         role="dialog"
         aria-modal="true"
         aria-label="Menu"

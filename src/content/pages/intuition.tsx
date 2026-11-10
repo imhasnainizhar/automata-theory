@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ChapterShell } from '@/components/content/ChapterShell';
+import { KeyTerms, Primer } from '@/components/content/Primer';
 import { Note, Section, Table } from '@/components/content/Blocks';
 import { M } from '@/components/content/Math';
 import { FASim } from '@/components/machines/FASim';
@@ -15,6 +16,47 @@ export default function Intuition() {
       lede="Before any formal definitions, get a feel for how machines think. Click, step and break things: states, transitions, determinism and memory will make sense by the end."
       chips={[{ text: '30 min, hands-on', tone: 'moss' }, { text: 'CPU walkthrough', tone: 'clay' }]}
     >
+      <Primer
+        analogy={<>A board game: your token sits on one square (the state), you roll a die (the input), and the rules tell you which square to move to (the transition).</>}
+      >
+        <p>This chapter is all about getting a <em>feel</em> for machines before any formulas. You will push coins into a vending machine, watch a CPU tick through its cycle, and see what it means for a machine to “guess”.</p>
+        <p>Keep one question in mind throughout: <strong>what does this machine need to remember?</strong> A vending machine only needs the money paid so far, not which coins. That “just enough memory” idea is what states are for.</p>
+      </Primer>
+      <KeyTerms
+        terms={[
+          {
+            term: 'State',
+            plain: 'The one thing the machine remembers right now.',
+            more: <><p>Like a bookmark: it does not store the whole book, just where you are. Two different histories that need the same future behaviour can share one state.</p></>,
+          },
+          {
+            term: 'Transition',
+            plain: 'Move from one state to another when a symbol is read.',
+            more: <><p>Drawn as a labelled arrow. Label <code>n</code> on an arrow from <M t="c_0" /> to <M t="c_5" /> means “with 0¢ paid, a nickel takes you to 5¢ paid”.</p></>,
+          },
+          {
+            term: 'Dead state',
+            plain: 'A trap: once you are in, you can never accept.',
+            more: <><p>For example “overpaid” in the vending machine. Diagrams often leave dead states out; a missing arrow quietly means “go to the trap”.</p></>,
+          },
+          {
+            term: 'Control unit',
+            plain: 'The part of a CPU that decides what happens next.',
+            more: <><p>It is a small state machine that cycles <em>Fetch → Decode → Execute</em>, sending signals to the rest of the chip. The registers and memory hold the data; the control unit holds the plan.</p></>,
+          },
+          {
+            term: 'Register',
+            plain: 'A tiny, very fast storage slot inside the CPU.',
+            more: <><p>The program counter (PC) holds the address of the next instruction, the instruction register (IR) holds the current one, and the accumulator (ACC) holds working results.</p></>,
+          },
+          {
+            term: 'Stack',
+            plain: 'A pile where you can only add or remove the top item.',
+            more: <><p>Like a stack of plates: <em>push</em> puts one on top, <em>pop</em> takes the top one off. It is exactly the memory needed to match nested brackets, because the most recently opened one must close first.</p></>,
+          },
+        ]}
+      />
+
       <Section id="states-and-transitions" n={1} title="States & transitions">
         <p>Every automaton is built from two ideas:</p>
         <ul>

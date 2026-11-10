@@ -29,9 +29,11 @@ export function useStepper(last: number, baseMs: number, { autoplay = false }: {
     return () => clearTimeout(t);
   }, [playing, k, last, baseMs, speed]);
 
+  // autoplay: start from the beginning shortly after becoming visible; pause when hidden again
   useEffect(() => {
-    if (!autoplay) return;
-    const t = setTimeout(() => setPlaying(true), 700);
+    if (!autoplay) { setPlaying(false); return; }
+    setKRaw(0);
+    const t = setTimeout(() => setPlaying(true), 600);
     return () => clearTimeout(t);
   }, [autoplay]);
 
