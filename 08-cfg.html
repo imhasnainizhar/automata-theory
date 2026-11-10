@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Context-Free Grammars · Automata A to Z</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script defer src="assets/automata.js"></script>
+<script defer src="assets/site.js"></script>
+</head>
+<body data-page="08-cfg">
+<main id="content">
+<article class="prose">
+<div class="kicker">Chapter 8 · Context-Free Languages</div>
+<h1>Context-Free Grammars</h1>
+<p class="lede">Finite automata cannot count, so they cannot handle nesting: balanced brackets, matching <code>begin</code>/<code>end</code>, expressions inside expressions. Grammars describe languages by <em>recursion</em> — and recursion is exactly what nesting needs.</p>
+<div class="chapter-meta"><span class="chip">⏱ 80 min</span><span class="chip">Prerequisite: Chapters 2, 6</span></div>
+
+<h2>The intuition</h2>
+<div class="box intuition">
+  <div class="box-title">Intuition — a grammar is a recipe that refers to itself</div>
+  <p>How would you define a “balanced string of parentheses” to a friend? Probably: <em>“either nothing, or a balanced string wrapped in parentheses, followed by another balanced string.”</em> That definition uses the concept being defined — it is recursive. Written compactly:</p>
+  <p>$$S \to (S)S \mid \varepsilon$$</p>
+  <p>That one line is a context-free grammar. It generates strings by <strong>rewriting</strong>: start with $S$, repeatedly replace some $S$ by one of its options, until only terminal symbols remain.</p>
+</div>
+<p>Automata <em>recognize</em> (read a string, say yes or no); grammars <em>generate</em> (produce all strings of the language). Both describe languages — from opposite directions.</p>
+
+<h2>Definition</h2>
+<div class="box definition">
+  <div class="box-title">Definition — context-free grammar (CFG)</div>
+  <p>A CFG is a 4-tuple $G = (V, \Sigma, R, S)$ where</p>
+  <ul>
+    <li>$V$ is a finite set of <strong>variables</strong> (nonterminals), usually capital letters;</li>
+    <li>$\Sigma$ is a finite set of <strong>terminals</strong>, disjoint from $V$;</li>
+    <li>$R$ is a finite set of <strong>rules</strong> (productions) of the form $A \to w$ with $A \in V$ and $w \in (V \cup \Sigma)^*$;</li>
+    <li>$S \in V$ is the <strong>start variable</strong>.</li>
+  </ul>
+  <p>If $u A v$ is a string and $A \to w$ is a rule, then $uAv \Rightarrow uwv$ (“yields in one step”). $\Rightarrow^*$ means “yields in zero or more steps”. The <strong>language</strong> of $G$ is $L(G) = \{ w \in \Sigma^* : S \Rightarrow^* w\}$. A language is <strong>context-free</strong> (a CFL) if some CFG generates it.</p>
+</div>
+<p>“Context-free” means the left side of every rule is a single variable: $A$ may be rewritten regardless of what surrounds it. (Context-<em>sensitive</em> grammars, Chapter 14, allow rules like $aAb \to aab$.)</p>
+
+<h2>Classic examples</h2>
+<div class="table-wrap"><table>
+<tr><th>Language</th><th>Grammar</th><th>Idea</th></tr>
+<tr><td>$\{0^n1^n : n \ge 0\}$</td><td>$S \to 0S1 \mid \varepsilon$</td><td>wrap matching symbols around the middle</td></tr>
+<tr><td>Even-length palindromes $\{ww^R\}$</td><td>$S \to 0S0 \mid 1S1 \mid \varepsilon$</td><td>build outward from the centre</td></tr>
+<tr><td>All palindromes over {0,1}</td><td>$S \to 0S0 \mid 1S1 \mid 0 \mid 1 \mid \varepsilon$</td><td>allow a middle symbol</td></tr>
+<tr><td>Balanced parentheses</td><td>$S \to (S)S \mid \varepsilon$</td><td>first group, then the rest</td></tr>
+<tr><td>$\{a^ib^jc^k : i = j \text{ or } j = k\}$</td><td>$S \to XC \mid AY$, $X \to aXb \mid \varepsilon$, $Y \to bYc \mid \varepsilon$, $A \to aA \mid \varepsilon$, $C \to cC \mid \varepsilon$</td><td>union = choose a branch at the start</td></tr>
+<tr><td>Equal numbers of a and b</td><td>$S \to aSbS \mid bSaS \mid \varepsilon$</td><td>match the first symbol with its partner</td></tr>
+<tr><td>Arithmetic expressions</td><td>$E \to E+T \mid T$, $T \to T*F \mid F$, $F \to (E) \mid a$</td><td>one variable per precedence level</td></tr>
+</table></div>
+<p>Notice $\{0^n1^n\}$ — the language we proved is <em>not</em> regular — has a one-rule grammar. So context-free languages are strictly more than regular ones.</p>
+
+<h2>Derivations and parse trees</h2>
+<p>A <strong>derivation</strong> of $0011$ from $S \to 0S1 \mid \varepsilon$:</p>
+<p>$$S \Rightarrow 0S1 \Rightarrow 00S11 \Rightarrow 0011.$$</p>
+<p>A <strong>parse tree</strong> shows the same derivation as a tree: each internal node is a variable, its children are the right-hand side of the rule used, and the leaves (read left to right) spell the string — the tree’s <em>yield</em>.</p>
+<figure class="tree" data-tree="S[0 S[0 S[ε] 1] 1]">
+  <figcaption><b>Parse tree for 0011.</b> The nesting of the tree is the nesting of the string: each <code>0</code> is matched with the <code>1</code> on the same level.</figcaption>
+</figure>
+<p>When there is more than one variable in a sentential form, we have a choice of which to expand. A <strong>leftmost derivation</strong> always expands the leftmost variable; a <strong>rightmost derivation</strong> the rightmost. Every parse tree corresponds to exactly one leftmost derivation (and one rightmost derivation), so parse trees are the “order-independent” view of a derivation.</p>
+<p>With the expression grammar, the parse tree of <code>a+a*a</code> is:</p>
+<figure class="tree" data-tree="E[E[T[F[a]]] + T[T[F[a]] * F[a]]]">
+  <figcaption><b>Parse tree for a+a*a.</b> Multiplication sits deeper in the tree, so it is evaluated first — the grammar <em>encodes precedence</em> in its structure. Compilers use exactly this tree.</figcaption>
+</figure>
+
+<h2>Ambiguity</h2>
+<div class="box definition">
+  <div class="box-title">Definition — ambiguous grammar</div>
+  <p>A grammar is <strong>ambiguous</strong> if some string has two different parse trees (equivalently, two different leftmost derivations).</p>
+</div>
+<p>The “obvious” grammar $E \to E+E \mid E*E \mid (E) \mid a$ is ambiguous: <code>a+a*a</code> has two trees.</p>
+<figure class="tree" data-tree="E[E[E[a] + E[a]] * E[a]]">
+  <figcaption><b>Tree 1</b>: means $(a+a)*a$ — wrong precedence.</figcaption>
+</figure>
+<figure class="tree" data-tree="E[E[a] + E[E[a] * E[a]]]">
+  <figcaption><b>Tree 2</b>: means $a+(a*a)$ — the intended one.</figcaption>
+</figure>
+<p>For a compiler, ambiguity is a bug: the meaning of a program must not depend on which tree the parser happened to build. Fixes:</p>
+<ul>
+  <li><strong>Stratify by precedence</strong>: one variable per level ($E$ for $+$, $T$ for $*$, $F$ for atoms), as in the unambiguous grammar above.</li>
+  <li><strong>Encode associativity</strong>: $E \to E + T$ (left-recursive) makes $+$ left-associative; $E \to T + E$ would make it right-associative.</li>
+  <li><strong>Use disambiguation rules</strong> in parser generators (<code>%left '+'</code>, the “dangling else binds to the nearest if” rule).</li>
+</ul>
+<div class="box pitfall">
+  <div class="box-title">Pitfall — ambiguity is a property of grammars, not (usually) languages</div>
+  <p>The same language often has both ambiguous and unambiguous grammars. But some CFLs are <strong>inherently ambiguous</strong>: <em>every</em> grammar for them is ambiguous. The standard example is $\{a^ib^jc^k : i = j \text{ or } j = k\}$ — strings with $i = j = k$ are generated “both ways”. And deciding whether a given CFG is ambiguous is undecidable (Chapter 13).</p>
+</div>
+
+<h2>Regular ⊂ context-free</h2>
+<p>Every regular language is context-free. Given a DFA, make one variable $R_q$ per state, a rule $R_q \to aR_{\delta(q,a)}$ for each transition, and $R_q \to \varepsilon$ for each accept state. Such grammars, where every rule has the form $A \to aB$ or $A \to \varepsilon$, are called <strong>right-linear</strong> (or regular) grammars, and they generate exactly the regular languages.</p>
+
+<h2>Chomsky Normal Form</h2>
+<div class="box definition">
+  <div class="box-title">Definition — Chomsky Normal Form (CNF)</div>
+  <p>A CFG is in CNF if every rule has one of the forms</p>
+  <p>$$A \to BC \qquad A \to a \qquad S \to \varepsilon$$</p>
+  <p>where $B, C$ are variables other than the start variable, and $S \to \varepsilon$ is allowed only for the start variable.</p>
+</div>
+<p>Why bother? In CNF, parse trees are <strong>binary</strong>, so a derivation of a string of length $n \ge 1$ takes exactly $2n - 1$ steps. That makes proofs (the CFL pumping lemma) and algorithms (CYK) much simpler.</p>
+<div class="box theorem">
+  <div class="box-title">Theorem — every CFL has a CNF grammar</div>
+  <p>Any CFG can be converted into an equivalent CFG in Chomsky Normal Form.</p>
+</div>
+<p>The conversion, in order:</p>
+<ol>
+  <li><strong>START</strong>: add a new start $S_0 \to S$ (so the start never appears on a right side).</li>
+  <li><strong>DEL</strong> (remove ε-rules): find all <em>nullable</em> variables. For each rule, add every version with some nullable occurrences deleted; then remove $A \to \varepsilon$ (except possibly $S_0 \to \varepsilon$).</li>
+  <li><strong>UNIT</strong> (remove $A \to B$): replace by $A \to w$ for every rule $B \to w$, repeating until no unit rules remain.</li>
+  <li><strong>TERM</strong>: in right sides of length ≥ 2, replace each terminal $a$ by a new variable $U_a \to a$.</li>
+  <li><strong>BIN</strong>: split long right sides: $A \to B_1B_2\cdots B_k$ becomes $A \to B_1A_1$, $A_1 \to B_2A_2$, …</li>
+</ol>
+<div class="box example">
+  <div class="box-title">Worked example</div>
+  <p>Start: $S \to ASA \mid aB$, $A \to B \mid S$, $B \to b \mid \varepsilon$.</p>
+  <p><b>START:</b> add $S_0 \to S$.</p>
+  <p><b>DEL:</b> $B$ is nullable, hence $A$ (via $A \to B$). Removing them: $S \to ASA \mid SA \mid AS \mid aB \mid a$ (and the useless $S \to S$ is dropped); $A \to B \mid S$; $B \to b$.</p>
+  <p><b>UNIT:</b> $S_0 \to S$ becomes $S_0 \to ASA \mid SA \mid AS \mid aB \mid a$; $A \to B$ becomes $A \to b$; $A \to S$ becomes $A \to ASA \mid SA \mid AS \mid aB \mid a$.</p>
+  <p><b>TERM + BIN:</b> $aB \Rightarrow UB$ with $U \to a$; $ASA \Rightarrow AA_1$ with $A_1 \to SA$. Final grammar:</p>
+  <p>$$\begin{aligned} S_0 &\to AA_1 \mid UB \mid a \mid SA \mid AS \\ S &\to AA_1 \mid UB \mid a \mid SA \mid AS \\ A &\to b \mid AA_1 \mid UB \mid a \mid SA \mid AS \\ A_1 &\to SA \qquad U \to a \qquad B \to b \end{aligned}$$</p>
+</div>
+<p>(<strong>Greibach Normal Form</strong>, where every rule is $A \to a B_1 \cdots B_k$, also always exists; it is useful for building PDAs that read one symbol per step.)</p>
+
+<h2>Parsing: the CYK algorithm</h2>
+<p>Membership — “is $w \in L(G)$?” — is decidable for every CFG. The Cocke–Younger–Kasami algorithm solves it by dynamic programming in $O(n^3 \cdot |G|)$ time for a grammar in CNF.</p>
+<div class="box intuition">
+  <div class="box-title">Intuition — build answers for short substrings first</div>
+  <p>Let $T[i,j]$ be the set of variables that can generate the substring $w_i \cdots w_j$. For single symbols, read it off the rules $A \to a$. For longer substrings, try every split point $k$: if $B$ generates the left part and $C$ the right part and $A \to BC$ is a rule, then $A$ generates the whole. Accept iff $S \in T[1,n]$.</p>
+</div>
+<pre><code>for i in 1..n:            T[i,i] = { A : A → wᵢ }
+for len in 2..n:
+  for i in 1..n-len+1:
+    j = i + len - 1
+    for k in i..j-1:
+      for each rule A → B C:
+        if B ∈ T[i,k] and C ∈ T[k+1,j]: add A to T[i,j]
+accept iff S ∈ T[1,n]</code></pre>
+<div class="box example">
+  <div class="box-title">Worked example</div>
+  <p>Grammar: $S \to AB \mid BC$, $A \to BA \mid a$, $B \to CC \mid b$, $C \to AB \mid a$. Input: $w = baaba$.</p>
+  <div class="table-wrap"><table>
+  <tr><th>length ↓ / start →</th><th class="c">1 (b)</th><th class="c">2 (a)</th><th class="c">3 (a)</th><th class="c">4 (b)</th><th class="c">5 (a)</th></tr>
+  <tr><td>5</td><td class="c"><b>{S, A, C}</b></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>4</td><td class="c">∅</td><td class="c">{S, A, C}</td><td></td><td></td><td></td></tr>
+  <tr><td>3</td><td class="c">∅</td><td class="c">{B}</td><td class="c">{B}</td><td></td><td></td></tr>
+  <tr><td>2</td><td class="c">{S, A}</td><td class="c">{B}</td><td class="c">{S, C}</td><td class="c">{S, A}</td><td></td></tr>
+  <tr><td>1</td><td class="c">{B}</td><td class="c">{A, C}</td><td class="c">{A, C}</td><td class="c">{B}</td><td class="c">{A, C}</td></tr>
+  </table></div>
+  <p>For instance $T$ for “<code>ba</code>” (start 1, length 2): $B \cdot \{A, C\}$ gives pairs $BA$ and $BC$, produced by $A \to BA$ and $S \to BC$, so $\{S, A\}$. The top cell contains $S$, so <strong>$baaba \in L(G)$</strong>.</p>
+</div>
+<p>Practical parsers (LL, LR — Chapter 16) are faster, $O(n)$, but only work for restricted grammars. CYK and its cousins (Earley, GLR) handle any CFG.</p>
+
+<h2>Exercises</h2>
+<div class="exercises">
+<details class="ex"><summary>Give a CFG for $\{a^ib^j : i \ge j\}$. <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>$S \to aSb \mid aS \mid \varepsilon$. Each $b$ is matched with an $a$; extra $a$’s are allowed. (This grammar is ambiguous — e.g. $aab$ — an unambiguous version: $S \to aSb \mid A$, $A \to aA \mid \varepsilon$.)</p></div></details>
+
+<details class="ex"><summary>Give a CFG for $\{w \in \{a,b\}^* : w \text{ is not a palindrome}\}$. <span class="lvl hard">hard</span></summary>
+<div class="sol"><p>A non-palindrome has, at some depth from the outside, a mismatched pair: $S \to aSa \mid bSb \mid aXb \mid bXa$, $X \to aX \mid bX \mid \varepsilon$. The outer layers match, then one mismatch, then anything in the middle.</p></div></details>
+
+<details class="ex"><summary>Show that $S \to SS \mid (S) \mid \varepsilon$ is ambiguous. <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>The string <code>()</code> has two different leftmost derivations: $S \Rightarrow (S) \Rightarrow ()$ and $S \Rightarrow SS \Rightarrow (S)S \Rightarrow ()S \Rightarrow ()$. (In fact even $\varepsilon$ has infinitely many trees.) For a longer example, <code>()()()</code> can be grouped as $(()())\,()$ or $()\,(()())$ at the top-level $S \Rightarrow SS$.</p></div></details>
+
+<details class="ex"><summary>Construct a right-linear grammar for “binary strings ending in 01” from the DFA of Chapter 3. <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>$Q_0 \to 0Q_1 \mid 1Q_0$, $Q_1 \to 0Q_1 \mid 1Q_2$, $Q_2 \to 0Q_1 \mid 1Q_0 \mid \varepsilon$; start $Q_0$.</p></div></details>
+
+<details class="ex"><summary>Convert $S \to aSb \mid \varepsilon$ to CNF. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>START: $S_0 \to S$. DEL: $S$ nullable → $S \to aSb \mid ab$, $S_0 \to S \mid \varepsilon$. UNIT: $S_0 \to aSb \mid ab \mid \varepsilon$. TERM: $A \to a$, $B \to b$. BIN: $S_0 \to AX \mid AB \mid \varepsilon$, $S \to AX \mid AB$, $X \to SB$, $A \to a$, $B \to b$.</p></div></details>
+
+<details class="ex"><summary>Using CYK with the example grammar, is <code>ab</code> in the language? <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>$T[1,1] = \{A, C\}$, $T[2,2] = \{B\}$. Pairs $AB$ and $CB$: $AB$ is produced by $S$ and $C$. So $T[1,2] = \{S, C\}$, which contains $S$ — yes.</p></div></details>
+</div>
+
+<div class="box takeaways">
+  <div class="box-title">Takeaways</div>
+  <ul>
+    <li>CFG $(V,\Sigma,R,S)$: rules $A \to w$ rewrite a single variable; $L(G)$ = terminal strings derivable from $S$.</li>
+    <li>Recursion handles nesting: $S \to 0S1 \mid \varepsilon$ generates a non-regular language. Regular ⊊ context-free.</li>
+    <li>Parse trees capture structure; ambiguity = two trees for one string. Fix with precedence layers; some CFLs are inherently ambiguous.</li>
+    <li>CNF ($A \to BC$, $A \to a$) always exists: START, DEL, UNIT, TERM, BIN.</li>
+    <li>CYK decides membership in $O(n^3)$ by dynamic programming over substrings.</li>
+  </ul>
+</div>
+</article>
+</main>
+</body>
+</html>
