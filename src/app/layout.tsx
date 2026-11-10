@@ -4,6 +4,7 @@ import 'katex/dist/katex.min.css';
 import './globals.css';
 import { SiteChrome } from '@/components/SiteChrome';
 import { Footer } from '@/components/Footer';
+import { Splash, splashScript } from '@/components/Splash';
 import { getStars } from '@/lib/github';
 import { site } from '@/lib/site';
 
@@ -29,8 +30,15 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const stars = await getStars();
   return (
-    <html lang="en" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
+    <html lang="en" className={`${display.variable} ${sans.variable} ${mono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: splashScript }} />
+        <noscript>
+          <style>{'.splash{display:none}'}</style>
+        </noscript>
+      </head>
       <body>
+        <Splash />
         <SiteChrome stars={stars} />
         <div className="page">
           {children}
