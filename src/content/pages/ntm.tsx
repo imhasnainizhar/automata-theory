@@ -1,4 +1,5 @@
 import { ChapterShell } from '@/components/content/ChapterShell';
+import { KeyTerms, Primer } from '@/components/content/Primer';
 import { Note, Section, Table } from '@/components/content/Blocks';
 import { M, MB } from '@/components/content/Math';
 import { Exercise } from '@/components/content/Exercise';
@@ -44,6 +45,52 @@ export default function NTM() {
       lede="A Turing machine allowed to branch. It recognises nothing new, but how fast it could answer, compared with a deterministic machine, is the P vs NP question."
       chips={[{ text: 'Type 0 · Recursively enumerable', tone: 'clay' }, { text: 'Nondeterministic', tone: 'clay' }, { text: '40 min' }]}
     >
+      <Primer
+        analogy={<>Hard to solve, easy to check: finding the combination to a lock takes ages, but checking a suggested combination takes seconds.</>}
+      >
+        <p>A <strong>nondeterministic Turing machine</strong> is a Turing machine that can branch: at each step it may follow several possible moves at once, and it accepts if any branch succeeds.</p>
+        <p>It cannot solve anything an ordinary Turing machine cannot, but it might solve some problems <em>much faster</em>. Whether that speed-up is real is the famous open question <strong>P vs NP</strong>, worth a million-dollar prize.</p>
+      </Primer>
+      <KeyTerms
+        terms={[
+          {
+            term: 'NTM',
+            plain: 'A Turing machine that may branch.',
+            more: <><p>Each step may allow several moves. The run is a tree of possibilities; the input is accepted if any path reaches the accept state.</p></>,
+          },
+          {
+            term: 'Computation tree',
+            plain: 'All possible runs drawn as a branching tree.',
+            more: <><p>The root is the starting configuration and each node branches once per allowed move. A deterministic simulation explores this tree level by level (breadth-first).</p></>,
+          },
+          {
+            term: 'Breadth-first search',
+            plain: 'Explore all positions at depth 1, then depth 2, and so on.',
+            more: <><p>Needed because some branches may go on forever; exploring level by level guarantees an accepting branch is eventually found.</p></>,
+          },
+          {
+            term: 'Certificate',
+            plain: 'A short piece of evidence that the answer is yes.',
+            more: <><p>For “is this number composite?” the certificate is a factor. An NTM “guesses” the certificate, then checks it.</p></>,
+          },
+          {
+            term: 'P',
+            plain: 'Problems solvable quickly (in polynomial time).',
+            more: <><p>Polynomial time means the steps grow like <M t="n^2" /> or <M t="n^3" /> with input size <M t="n" />, not like <M t="2^n" />. Sorting and shortest paths are in P.</p></>,
+          },
+          {
+            term: 'NP',
+            plain: 'Problems whose yes-answers can be checked quickly.',
+            more: <><p>Equivalently, problems an NTM solves in polynomial time. Sudoku, scheduling and SAT are in NP. Every problem in P is also in NP.</p></>,
+          },
+          {
+            term: 'NP-complete',
+            plain: 'The hardest problems in NP.',
+            more: <><p>If any one of them had a fast algorithm, all of NP would. SAT was the first (Cook–Levin); thousands more are known.</p></>,
+          },
+        ]}
+      />
+
       <Section id="intuition" n={1} title="Intuition" sub="What problem does this machine solve?">
         <p>
           Many problems are hard to <em>solve</em> but easy to <em>check</em>. Is 391 composite? Finding a factor takes search, but given “17”, checking <M t="17 \times 23 = 391" /> is instant. A Sudoku can take an hour to solve and seconds to verify.

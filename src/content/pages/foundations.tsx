@@ -1,4 +1,5 @@
 import { ChapterShell } from '@/components/content/ChapterShell';
+import { KeyTerms, Primer } from '@/components/content/Primer';
 import { Note, Section, Table } from '@/components/content/Blocks';
 import { M, MB } from '@/components/content/Math';
 import { Exercise } from '@/components/content/Exercise';
@@ -13,6 +14,57 @@ export default function Foundations() {
       lede="Before machines, we need something for them to read. This chapter builds the vocabulary of the whole subject: alphabets, strings, languages, and the grammars that generate them."
       chips={[{ text: '35 min read', tone: 'moss' }, { text: '3 interactive tools', tone: 'ochre' }]}
     >
+      <Primer
+        analogy={<>Letters are the alphabet, words are strings, and a dictionary is a language: a list of which words count.</>}
+      >
+        <p>Before we can build machines, we need words for what they read. It is simpler than it sounds: an <strong>alphabet</strong> is a set of symbols (like 0 and 1), a <strong>string</strong> is a row of those symbols (like <code>0110</code>), and a <strong>language</strong> is just a collection of strings, for example “all binary strings that end in 1”.</p>
+        <p>Every yes/no problem can be written as a language: the set of inputs whose answer is yes. So “can a machine solve this problem?” becomes “can a machine tell which strings belong to this language?”. That one idea connects everything in this course.</p>
+      </Primer>
+      <KeyTerms
+        terms={[
+          {
+            term: <><M t="\Sigma" /> (sigma), alphabet</>,
+            plain: 'The set of symbols allowed in the input.',
+            more: <><p>Must be finite and non-empty, for example <M t="\{0,1\}" /> or <M t="\{a,b,c\}" />. The Greek capital sigma <M t="\Sigma" /> is the traditional name.</p></>,
+          },
+          {
+            term: 'String',
+            plain: 'A finite row of symbols, like 0110.',
+            more: <><p>Also called a <em>word</em>. Order matters (<code>ab</code> ≠ <code>ba</code>) and repeats are allowed. Its <strong>length</strong> <M t="|w|" /> is the number of symbols.</p></>,
+          },
+          {
+            term: <><M t="\varepsilon" /> (epsilon)</>,
+            plain: 'The empty string: zero symbols.',
+            more: <><p>It is a real string, just with no characters, like an empty text box. <M t="|\varepsilon| = 0" />. Do not confuse it with <M t="\emptyset" />, which is a set with nothing in it.</p></>,
+          },
+          {
+            term: <><M t="\Sigma^*" /> (sigma-star)</>,
+            plain: 'Every possible string over the alphabet.',
+            more: <><p>Including <M t="\varepsilon" />. For <M t="\Sigma = \{0,1\}" /> that is <M t="\varepsilon, 0, 1, 00, 01, 10, 11, 000, \dots" />, an infinite list. The star means “any number of times, including zero”.</p></>,
+          },
+          {
+            term: 'Language',
+            plain: 'A set of strings: the ones that “count”.',
+            more: <><p>Any subset of <M t="\Sigma^*" />. It can be finite (<M t="\{ab, ba\}" />) or infinite (all strings with equally many a’s and b’s). Machines recognise languages; grammars generate them.</p></>,
+          },
+          {
+            term: 'Concatenation',
+            plain: 'Gluing strings end to end.',
+            more: <><p><M t="ab" /> followed by <M t="ba" /> gives <M t="abba" />. For languages, <M t="AB" /> is every way of taking a string from <M t="A" /> and gluing one from <M t="B" /> after it.</p></>,
+          },
+          {
+            term: 'Kleene star',
+            plain: 'Repeat zero or more times.',
+            more: <><p><M t="L^*" /> is every string you can make by gluing together any number of strings from <M t="L" />, including none (which gives <M t="\varepsilon" />). Named after Stephen Kleene.</p></>,
+          },
+          {
+            term: 'Grammar',
+            plain: 'A set of rewriting rules that generates a language.',
+            more: <><p>Start from a symbol <M t="S" /> and keep replacing parts using rules like <M t="S \to aSb" /> until only real characters remain. Every string you can reach this way is in the language.</p></>,
+          },
+        ]}
+      />
+
       <Section id="alphabets-and-strings" n={1} title="Alphabets & strings">
         <Note kind="definition">
           <ul>
