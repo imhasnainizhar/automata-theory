@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheat Sheet & Practice · Automata A to Z</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script defer src="assets/automata.js"></script>
+<script defer src="assets/site.js"></script>
+</head>
+<body data-page="17-review">
+<main id="content">
+<article class="prose">
+<div class="kicker">Chapter 17 · Mastery</div>
+<h1>Cheat Sheet &amp; Practice</h1>
+<p class="lede">The whole course on a few screens, a decision procedure for the questions you will be asked, and a mixed problem set to prove to yourself that you have reached a solid level.</p>
+<div class="chapter-meta"><span class="chip">⏱ 2–3 h for all problems</span><span class="chip">Everything</span></div>
+
+<h2>The models at a glance</h2>
+<div class="table-wrap"><table>
+<tr><th>Model</th><th>Definition</th><th>Memory</th><th>Equivalent to</th></tr>
+<tr><td>DFA</td><td>$(Q,\Sigma,\delta,q_0,F)$, $\delta: Q\times\Sigma \to Q$</td><td>finite</td><td>NFA, ε-NFA, regex, right-linear grammar</td></tr>
+<tr><td>NFA</td><td>$\delta: Q\times\Sigma_\varepsilon \to \mathcal{P}(Q)$</td><td>finite</td><td>DFA (subset construction, up to $2^n$ states)</td></tr>
+<tr><td>Regex</td><td>$\emptyset, \varepsilon, a, \cup, \cdot, {}^*$</td><td>—</td><td>NFA (Thompson), from NFA by state elimination</td></tr>
+<tr><td>CFG</td><td>$(V,\Sigma,R,S)$, rules $A\to w$</td><td>—</td><td>PDA; normal forms CNF, GNF</td></tr>
+<tr><td>PDA</td><td>$\delta: Q\times\Sigma_\varepsilon\times\Gamma_\varepsilon \to \mathcal{P}(Q\times\Gamma^*)$</td><td>one stack</td><td>CFG (DPDA strictly weaker)</td></tr>
+<tr><td>LBA</td><td>TM restricted to input cells</td><td>linear tape</td><td>context-sensitive grammars</td></tr>
+<tr><td>TM</td><td>$\delta: Q\times\Gamma \to Q\times\Gamma\times\{L,R\}$</td><td>unbounded tape</td><td>multitape, NTM, 2-stack PDA, RAM, unrestricted grammars, every programming language</td></tr>
+</table></div>
+
+<h2>Constructions you must know cold</h2>
+<div class="table-wrap"><table>
+<tr><th>Construction</th><th>Input → Output</th><th>Key idea</th><th>Size</th></tr>
+<tr><td>Product</td><td>2 DFAs → DFA for ∩ / ∪</td><td>run in parallel, states are pairs</td><td>$|Q_1|\cdot|Q_2|$</td></tr>
+<tr><td>Complement</td><td>DFA → DFA</td><td>swap $F$ and $Q\setminus F$ (complete DFA!)</td><td>same</td></tr>
+<tr><td>Subset construction</td><td>NFA → DFA</td><td>states = ε-closed sets of NFA states</td><td>$\le 2^{|Q|}$</td></tr>
+<tr><td>Thompson</td><td>regex → ε-NFA</td><td>structural induction, glue with ε</td><td>$O(|R|)$</td></tr>
+<tr><td>State elimination</td><td>NFA → regex</td><td>$R_{pq}R_{qq}^*R_{qr}\cup R_{pr}$</td><td>can be exponential</td></tr>
+<tr><td>Table filling</td><td>DFA → minimal DFA</td><td>mark distinguishable pairs backwards</td><td>$O(n^2|\Sigma|)$ (Hopcroft: $n\log n$)</td></tr>
+<tr><td>CNF conversion</td><td>CFG → CNF</td><td>START, DEL, UNIT, TERM, BIN</td><td>polynomial</td></tr>
+<tr><td>CYK</td><td>CNF + $w$ → yes/no</td><td>DP over substrings</td><td>$O(n^3|G|)$</td></tr>
+<tr><td>CFG → PDA</td><td>grammar → PDA</td><td>stack holds unmatched sentential form</td><td>3 states</td></tr>
+<tr><td>Universal TM</td><td>$\langle M,w\rangle$ → simulate</td><td>rulebook on a tape</td><td>—</td></tr>
+</table></div>
+
+<h2>Is $L$ regular? A decision procedure</h2>
+<ol>
+  <li><strong>Is it finite?</strong> Then yes.</li>
+  <li><strong>Does recognizing it need only bounded memory?</strong> (parities, remainders, last $k$ symbols, “seen X yet”) → build a DFA/NFA/regex. Done.</li>
+  <li><strong>Does it need to compare two unbounded quantities</strong> (counts, a string with its copy/reverse)? Suspect non-regular. Then:
+    <ul>
+      <li>Try <strong>closure</strong>: intersect with a regular language / apply a homomorphism to reach $0^n1^n$.</li>
+      <li>Or <strong>Myhill–Nerode</strong>: find infinitely many pairwise distinguishable prefixes (e.g. $0^i$ distinguished by $1^i$).</li>
+      <li>Or <strong>pumping</strong>: pick $s$ in terms of $p$, with the “interesting” part within the first $p$ symbols; handle all splits; choose $i$ (remember $i = 0$).</li>
+    </ul>
+  </li>
+</ol>
+
+<h2>Is $L$ context-free?</h2>
+<ol>
+  <li><strong>One matching / nesting</strong> (balanced, $a^nb^n$, palindromes, $a^ib^jc^k$ with $i=j$ <em>or</em> $j=k$)? → write a grammar or a PDA.</li>
+  <li><strong>Two independent matchings, or crossing dependencies</strong> ($a^nb^nc^n$, $ww$, $a^ib^jc^id^j$)? Suspect not. Then:
+    <ul>
+      <li>Closure: intersect with a regular language to reach $a^nb^nc^n$.</li>
+      <li>CFL pumping: $s = uvxyz$, $|vxy| \le p$ — the window can’t touch three blocks of length $p$.</li>
+      <li>Unary alphabet? Then context-free ⇔ regular.</li>
+    </ul>
+  </li>
+</ol>
+
+<h2>Is a problem decidable?</h2>
+<ol>
+  <li><strong>Is it about a finite object or a bounded run?</strong> (a DFA, a CFG’s membership/emptiness, “within $k$ steps”) → usually decidable: simulate or search a finite space.</li>
+  <li><strong>Is it about the language / behaviour of an arbitrary TM or program?</strong> → <strong>Rice</strong>: nontrivial ⇒ undecidable.</li>
+  <li><strong>Otherwise</strong> reduce from $A_\text{TM}$, $\textit{HALT}_\text{TM}$, $E_\text{TM}$ or PCP: assume a decider for <em>your</em> problem, build a decider for the known one. Construct (don’t run) a machine whose language encodes the answer.</li>
+  <li><strong>Recognizable?</strong> If “yes” instances have a finite certificate you can search for, yes. If both the problem and its complement are recognizable, it is decidable. Unrecognizable: mapping-reduce from $\overline{A_\text{TM}}$.</li>
+</ol>
+
+<h2>Is a problem NP-complete?</h2>
+<ol>
+  <li>Show it is <strong>in NP</strong>: name the certificate and give a polynomial verifier.</li>
+  <li>Pick a known NP-complete problem $C$ that “looks similar” (3SAT for logic, CLIQUE / VERTEX-COVER / INDEPENDENT-SET for graphs, SUBSET-SUM for numbers, HAMPATH for orderings, 3-COLOR for partitions).</li>
+  <li>Give a polynomial $f$ with $x \in C \iff f(x) \in$ your problem. Prove <strong>both</strong> directions of the iff.</li>
+</ol>
+
+<h2>Closure &amp; decidability summary</h2>
+<div class="table-wrap"><table>
+<tr><th></th><th class="c">∪</th><th class="c">∩</th><th class="c">complement</th><th class="c">·</th><th class="c">*</th><th class="c">membership</th><th class="c">emptiness</th><th class="c">equivalence</th></tr>
+<tr><td>Regular</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+<tr><td>Context-free</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c no">✗</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c no">✗</td></tr>
+<tr><td>Decidable</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c no">✗</td></tr>
+<tr><td>Recognizable</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c no">✗</td><td class="c no">✗</td></tr>
+</table></div>
+
+<h2>The ten ideas to remember</h2>
+<ol>
+  <li>A problem is a language; solving it is deciding membership.</li>
+  <li>A state is a summary of the past that is sufficient for the future.</li>
+  <li>Nondeterminism = guessing = tracking all possibilities at once.</li>
+  <li>Long inputs + finite memory ⇒ repetition ⇒ pumping (pigeonhole).</li>
+  <li>Minimal DFA states = classes of indistinguishable prefixes (Myhill–Nerode).</li>
+  <li>Recursion/nesting needs a stack; one stack matches one thing.</li>
+  <li>Two stacks, or a rewritable tape, give universal computation (Church–Turing).</li>
+  <li>Self-reference + diagonalization ⇒ the Halting Problem is undecidable.</li>
+  <li>Reductions transfer hardness from left to right: $A \le B$, A hard ⇒ B hard.</li>
+  <li>Easy to check ≠ easy to find? That is P vs NP.</li>
+</ol>
+
+<h2>Mixed practice problems</h2>
+<p>Try each one for at least 10 minutes before opening the solution. Classify, design, or prove as appropriate.</p>
+<div class="exercises">
+<details class="ex"><summary>Design a DFA over $\{a,b\}$ accepting strings with an even number of $a$’s and ending in $b$. How many states? <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>Product of “parity of $a$’s” (2 states) and “last symbol is $b$” (2 states): 4 states $(E/O, b?/\neg b)$. Start $(E, \neg b)$; accept $(E, b)$. All four states are reachable and distinguishable, so 4 is minimal.</p></div></details>
+
+<details class="ex"><summary>Is $\{a^m b^n : m + n \text{ is even}\}$ regular? <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>Yes: $(aa)^*(bb)^* \cup a(aa)^*b(bb)^*$. Only the parity of the total length matters, plus the order constraint $a^*b^*$.</p></div></details>
+
+<details class="ex"><summary>Is $\{a^m b^n : m \ne n\}$ regular? Context-free? <span class="lvl med">medium</span></summary>
+<div class="sol"><p>Not regular: if it were, its complement intersected with $a^*b^*$, namely $\{a^nb^n\}$, would be regular. Context-free: $S \to aSb \mid A \mid B$, $A \to aA \mid a$, $B \to bB \mid b$ (generate a balanced core, then extra $a$’s or extra $b$’s).</p></div></details>
+
+<details class="ex"><summary>Convert the NFA with states $\{1,2\}$, start 1, accept $\{2\}$, $\delta(1,a)=\{1,2\}$, $\delta(2,b)=\{1\}$ to a DFA. <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>$\{1\} \xrightarrow{a} \{1,2\}$, $\{1\} \xrightarrow{b} \emptyset$; $\{1,2\} \xrightarrow{a} \{1,2\}$, $\{1,2\} \xrightarrow{b} \{1\}$; $\emptyset$ loops. Accept $\{1,2\}$. The language is $a(a \cup ba)^*$: start with $a$, every $b$ is followed by an $a$, end with $a$.</p></div></details>
+
+<details class="ex"><summary>Prove $\{a^ib^jc^k : i \lt j \lt k\}$ is not context-free. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>Take $s = a^pb^{p+1}c^{p+2}$. Since $|vxy| \le p$, the window never contains both $a$’s and $c$’s. If $v$ or $y$ contains two kinds of symbols, pumping up puts symbols out of order. Otherwise let $\alpha, \beta, \gamma$ be the numbers of $a$’s, $b$’s, $c$’s in $vy$:</p>
+<ul>
+<li>$\alpha \ge 1$ (so $\gamma = 0$): pump up ($i = 2$). If $\beta \ge 1$ the $b$-count becomes $\ge p+2 = k$; if $\beta = 0$ the $a$-count becomes $\ge p+1 = j$. Either way $i \lt j \lt k$ breaks.</li>
+<li>$\alpha = 0$, $\beta \ge 1$: pump down ($i = 0$); the $b$-count drops to $\le p$, the $a$-count.</li>
+<li>Only $c$’s: pump down; the $c$-count drops to $\le p+1$, the $b$-count.</li>
+</ul></div></details>
+
+<details class="ex"><summary>Give a CFG for $\{a^ib^jc^k : i + k = j\}$. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>$j = i + k$ means $b^j = b^ib^k$: $S \to XY$, $X \to aXb \mid \varepsilon$, $Y \to bYc \mid \varepsilon$.</p></div></details>
+
+<details class="ex"><summary>Minimize: states $A..D$, start $A$, accept $\{C, D\}$; $A\xrightarrow{0}B, A\xrightarrow{1}C, B\xrightarrow{0}A, B\xrightarrow{1}D, C\xrightarrow{0,1}D, D\xrightarrow{0,1}C$. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>Pass 0 marks $\{A,C\},\{A,D\},\{B,C\},\{B,D\}$. $\{A,B\}$: on 0 → $\{B,A\}$, on 1 → $\{C,D\}$. $\{C,D\}$: on 0,1 → $\{D,C\}$. Neither ever gets marked: $A \equiv B$ and $C \equiv D$. Minimal DFA: 2 states — the language is “contains at least one 1”.</p></div></details>
+
+<details class="ex"><summary>Is $\{\langle M\rangle : M \text{ accepts some palindrome}\}$ decidable? Recognizable? <span class="lvl med">medium</span></summary>
+<div class="sol"><p>Undecidable by Rice (“$L(M)$ contains a palindrome” is a nontrivial language property). Recognizable: dovetail $M$ over all palindromes (run $i$ steps on each of the first $i$ palindromes, for $i = 1, 2, \dots$); accept when one is accepted.</p></div></details>
+
+<details class="ex"><summary>Is $\{\langle G\rangle : G \text{ is a CFG and } L(G) \text{ contains some palindrome}\}$ decidable? <span class="lvl hard">hard</span></summary>
+<div class="sol"><p>Undecidable, by reduction from PCP. Given dominoes $[t_i / b_i]$, build $G$ with rules $S \to t_i\,S\,b_i^R \mid t_i\,\#\,b_i^R$ for each $i$ ($\#$ a fresh symbol). $G$ generates exactly the strings $t_{i_1}\cdots t_{i_n}\,\#\,(b_{i_1}\cdots b_{i_n})^R$. Such a string is a palindrome iff the part before $\#$ is the reverse of the part after it, i.e. iff $t_{i_1}\cdots t_{i_n} = b_{i_1}\cdots b_{i_n}$ — a match. So a decider for this problem would decide PCP.</p></div></details>
+
+<details class="ex"><summary>Is $\{\langle M\rangle : M \text{, started on a blank tape, eventually writes the symbol } 1\}$ decidable? Does Rice’s theorem apply? <span class="lvl hard">hard</span></summary>
+<div class="sol"><p>Rice does <em>not</em> apply — this is a property of the machine’s behaviour, not of $L(M)$. It is still undecidable, by reduction from $A_\text{TM}$: given $\langle M, w\rangle$, build $M'$ that writes $w$ on its tape using a renamed copy of $M$’s alphabet containing no $1$, simulates $M$ on $w$ (never writing $1$), and writes a $1$ only if $M$ accepts. Then $M'$ writes a $1$ iff $M$ accepts $w$.</p></div></details>
+
+<details class="ex"><summary>Show DOUBLE-SAT (formula has at least two satisfying assignments) is NP-complete. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>In NP: certificate = two distinct satisfying assignments. Reduction from SAT: given $\varphi(x_1..x_n)$, output $\varphi' = \varphi \land (y \lor \bar y)$ with a fresh variable $y$. Each satisfying assignment of $\varphi$ gives two of $\varphi'$ (any $y$), and $\varphi'$ is satisfiable only if $\varphi$ is.</p></div></details>
+
+<details class="ex"><summary>True or false: “If $A \le_p B$ and $B \in \text{NP}$, then $A \in \text{NP}$.” And: “If $A \le_p B$ and $A$ is NP-complete, then $B$ is NP-complete.” <span class="lvl med">medium</span></summary>
+<div class="sol"><p>First: true (compute $f(w)$, then verify for $B$). Second: false — $B$ is NP-<strong>hard</strong>, but it might not be in NP (e.g. $B = \textit{HALT}_\text{TM}$, to which SAT reduces).</p></div></details>
+
+<details class="ex"><summary>A language $L$ and its complement are both context-free. Must $L$ be regular? Must it be deterministic context-free? <span class="lvl hard">hard</span></summary>
+<div class="sol"><p>Neither. <em>Not regular:</em> $L = \{a^nb^n\}$ — its complement (strings not of the form $a^*b^*$, plus $a^mb^n$ with $m \ne n$) is context-free, but $L$ is not regular. <em>Not deterministic:</em> $L = \{ww^R : w \in \{a,b\}^*\}$ — its complement (odd-length strings, plus even-length non-palindromes: $S \to aSa \mid bSb \mid aXb \mid bXa$, with $X$ generating every even-length string) is context-free, yet $L$ is not a DCFL.</p></div></details>
+</div>
+
+<h2>Where to go next</h2>
+<div class="table-wrap"><table>
+<tr><th>Resource</th><th>Why</th></tr>
+<tr><td>Michael Sipser, <em>Introduction to the Theory of Computation</em></td><td>The clearest textbook; this site follows its notation closely.</td></tr>
+<tr><td>Hopcroft, Motwani &amp; Ullman, <em>Introduction to Automata Theory, Languages, and Computation</em></td><td>More algorithms and detail on automata and grammars.</td></tr>
+<tr><td>Dexter Kozen, <em>Automata and Computability</em></td><td>Short, elegant lectures; great second pass.</td></tr>
+<tr><td>Arora &amp; Barak, <em>Computational Complexity: A Modern Approach</em></td><td>The next step after Chapter 15.</td></tr>
+<tr><td>MIT 18.404J (Sipser’s lectures, MIT OpenCourseWare)</td><td>Free video lectures of the full course.</td></tr>
+<tr><td>Aho, Lam, Sethi &amp; Ullman, <em>Compilers</em> (the Dragon Book)</td><td>The theory applied: lexers, parsers, analysis.</td></tr>
+</table></div>
+
+<div class="box takeaways">
+  <div class="box-title">You made it</div>
+  <p>If you can do most of the problems above, you understand the theory of computation at the level of a strong undergraduate course: you can design machines, convert between models, prove both possibility and impossibility, and recognize these ideas in real systems. Go mark the chapters you have mastered — and come back to the Intuition boxes whenever you need a refresher.</p>
+</div>
+</article>
+</main>
+</body>
+</html>
