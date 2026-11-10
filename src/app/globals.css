@@ -735,3 +735,97 @@ button { font: inherit; color: inherit; }
 .world { transition: border-color .25s ease, background-color .25s ease; }
 .cell { transition: background-color .25s ease, border-color .25s ease, color .25s ease, box-shadow .25s ease; }
 @media (prefers-reduced-motion: reduce) { .tape-strip { transition: none; } }
+
+/* hero: all machines share one grid cell so switching never changes the pane's height */
+.pane-stack { display: grid; align-items: start; }
+.pane-slot { grid-area: 1 / 1; min-width: 0; visibility: hidden; opacity: 0; transition: opacity .28s ease, visibility 0s linear .28s; }
+.pane-slot.on { visibility: visible; opacity: 1; transition: opacity .28s ease .05s, visibility 0s; }
+
+/* ---------- Beginner openings: plain words + key terms ---------- */
+.primer {
+  margin: 8px 0 20px; padding: 20px 22px 16px; border-radius: 22px;
+  background: linear-gradient(135deg, rgba(226,232,211,.85), rgba(245,232,203,.55));
+  border: 1px solid rgba(86,112,63,.22);
+}
+.primer-label { display: inline-flex; align-items: center; gap: 8px; font: 700 11.5px/1 var(--font-sans); letter-spacing: .12em; text-transform: uppercase; color: var(--moss-deep); margin-bottom: 10px; }
+.primer-label svg { width: 16px; height: 16px; }
+.primer-body { font-size: 18px; line-height: 1.65; color: var(--ink); }
+.primer-body p { margin: 0 0 10px; }
+.primer-body p:last-child { margin-bottom: 0; }
+.primer-analogy { display: flex; gap: 12px; margin-top: 14px; padding: 12px 14px; border-radius: 16px; background: rgba(255,253,248,.7); border: 1px dashed rgba(86,112,63,.3); font-size: 15.5px; line-height: 1.55; color: var(--ink-2); }
+.primer-analogy > span { flex: none; font: italic 600 15px/1.5 var(--font-display); color: var(--clay-deep); }
+@media (max-width: 560px) { .primer { padding: 16px 16px 14px; } .primer-body { font-size: 17px; } .primer-analogy { flex-direction: column; gap: 4px; } }
+
+.keyterms { margin: 0 0 8px; border-radius: 22px; border: 1px solid var(--line); background: rgba(251,248,242,.75); overflow: hidden; }
+.keyterms-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 18px 10px; }
+.keyterms-head h3 { display: flex; align-items: center; gap: 8px; margin: 0 !important; font: 600 18px/1.2 var(--font-display) !important; }
+.keyterms-head h3 svg { width: 18px; height: 18px; color: var(--clay); }
+.keyterms-all { border: 0; background: none; cursor: pointer; font: 600 13px var(--font-sans); color: var(--clay-deep); padding: 6px 8px; border-radius: 8px; }
+.keyterms-all:hover { background: rgba(255,255,255,.7); }
+.keyterms ul { list-style: none; margin: 0; padding: 0; }
+.keyterms li { border-top: 1px dashed var(--line); }
+.kt-row { width: 100%; display: grid; grid-template-columns: minmax(110px, 190px) 1fr 20px; gap: 12px; align-items: baseline; padding: 12px 18px; border: 0; background: none; cursor: pointer; text-align: left; color: var(--ink); font: 400 15.5px/1.5 var(--font-sans); transition: background-color .2s ease; }
+.kt-row:hover { background: rgba(255,255,255,.55); }
+.kt-term { font: 600 16px/1.35 var(--font-display); color: var(--ink); }
+.kt-plain { color: var(--ink-2); }
+.kt-chev { width: 16px; height: 16px; color: var(--muted); align-self: center; transition: transform .35s cubic-bezier(.3,1.3,.5,1); }
+.keyterms li.open .kt-chev { transform: rotate(90deg); color: var(--clay); }
+.kt-more { padding: 2px 18px 14px; font-size: 15.5px; line-height: 1.65; color: var(--ink-2); }
+.kt-more p { margin: 0 0 8px; }
+.kt-more p:last-child { margin-bottom: 0; }
+.expand .kt-more { opacity: 0; transform: translateY(-6px); transition: opacity .2s ease, transform .3s cubic-bezier(.2,.8,.2,1); }
+.expand[data-open="true"] .kt-more { opacity: 1; transform: none; transition-delay: .06s; }
+@media (max-width: 560px) {
+  .kt-row { grid-template-columns: 1fr 18px; gap: 2px 10px; padding: 12px 14px; }
+  .kt-term { grid-column: 1; }
+  .kt-plain { grid-column: 1; grid-row: 2; font-size: 14.5px; }
+  .kt-chev { grid-column: 2; grid-row: 1 / span 2; }
+  .kt-more { padding: 2px 14px 14px; }
+}
+
+/* stage stepper */
+.stage-head { display: flex; align-items: baseline; gap: 10px; margin: 0 4px 10px; font-size: 16px; }
+.stage-head .roman { font-size: 20px; min-width: 0; }
+.stage-note { margin: 12px 4px 0; font-size: 15px; line-height: 1.6; color: var(--ink-2); min-height: 3.2em; }
+/* Kleene cycle figure */
+.cycle svg { width: 100%; height: auto; max-width: 620px; margin: 0 auto; display: block; }
+.cycle .node rect { fill: #fffdf8; stroke: var(--ink); stroke-width: 1.6; }
+.cycle .node text { font: 600 15px var(--font-sans); fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+.cycle .node .sub { font: 500 12px var(--font-sans); fill: var(--muted); }
+.cycle .arc { fill: none; stroke: var(--clay); stroke-width: 2; }
+.cycle .arc-label { font: 600 13px var(--font-sans); fill: var(--clay-deep); text-anchor: middle; paint-order: stroke; stroke: var(--surface); stroke-width: 5px; }
+
+/* Thompson building blocks */
+.piece-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 10px 0 18px; }
+.piece-grid .panel { margin: 0; }
+@media (max-width: 720px) { .piece-grid { grid-template-columns: 1fr; } }
+
+/* ---------- Custom scrollbars (OverlayScrollbars theme) ---------- */
+.os-theme-wa {
+  --os-size: 12px;
+  --os-padding-perpendicular: 3px;
+  --os-padding-axis: 4px;
+  --os-track-border-radius: 999px;
+  --os-track-bg: transparent;
+  --os-track-bg-hover: rgba(43, 38, 32, .05);
+  --os-track-bg-active: rgba(43, 38, 32, .07);
+  --os-handle-border-radius: 999px;
+  --os-handle-bg: rgba(85, 76, 65, .34);
+  --os-handle-bg-hover: rgba(85, 76, 65, .55);
+  --os-handle-bg-active: var(--clay);
+  --os-handle-min-size: 36px;
+  --os-handle-max-size: none;
+  --os-handle-perpendicular-size: 50%;
+  --os-handle-perpendicular-size-hover: 100%;
+  --os-handle-perpendicular-size-active: 100%;
+  --os-handle-interactive-area-offset: 4px;
+}
+.os-theme-wa .os-scrollbar-handle { box-shadow: 0 0 0 1px rgba(255, 253, 248, .55); transition: background-color .2s ease, width .2s ease, height .2s ease; }
+/* the page scrollbar sits below the floating nav and above the dock area */
+body > .os-scrollbar-vertical.os-theme-wa { top: 84px; bottom: 12px; z-index: 65; }
+@media (max-width: 860px) { body > .os-scrollbar-vertical.os-theme-wa { top: 72px; bottom: 90px; } }
+/* compact scrollbars inside boxes */
+.sidebar > .os-scrollbar.os-theme-wa, .trace > .os-scrollbar.os-theme-wa, .table > .os-scrollbar.os-theme-wa, .tape > .os-scrollbar.os-theme-wa, .math-block > .os-scrollbar.os-theme-wa {
+  --os-size: 9px;
+  --os-padding-perpendicular: 2px;
+}

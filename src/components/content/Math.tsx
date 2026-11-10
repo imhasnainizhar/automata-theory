@@ -11,5 +11,5 @@ export function M({ t }: { t: string }) {
 
 /** Display math. */
 export function MB({ t }: { t: string }) {
-  return <div className="math-block" dangerouslySetInnerHTML={{ __html: render(t, true) }} />;
+  return <div className="math-block" data-scroll="x" dangerouslySetInnerHTML={{ __html: render(t, true) }} />;
 }

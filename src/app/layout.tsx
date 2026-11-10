@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from 'next';
 import { DM_Sans, Fraunces, JetBrains_Mono } from 'next/font/google';
 import 'katex/dist/katex.min.css';
+import 'overlayscrollbars/overlayscrollbars.css';
 import './globals.css';
 import { SiteChrome } from '@/components/SiteChrome';
 import { Footer } from '@/components/Footer';
 import { Splash, splashScript } from '@/components/Splash';
+import { Scrollbars } from '@/components/Scrollbars';
 import { getStars } from '@/lib/github';
 import { site } from '@/lib/site';
 
@@ -30,15 +32,16 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const stars = await getStars();
   return (
-    <html lang="en" className={`${display.variable} ${sans.variable} ${mono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${display.variable} ${sans.variable} ${mono.variable}`} suppressHydrationWarning data-overlayscrollbars-initialize="">
       <head>
         <script dangerouslySetInnerHTML={{ __html: splashScript }} />
         <noscript>
           <style>{'.splash{display:none}'}</style>
         </noscript>
       </head>
-      <body>
+      <body data-overlayscrollbars-initialize="">
         <Splash />
+        <Scrollbars />
         <SiteChrome stars={stars} />
         <div className="page">
           {children}

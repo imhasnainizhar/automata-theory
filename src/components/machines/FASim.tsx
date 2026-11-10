@@ -56,7 +56,7 @@ export function FASim({
       <StateDiagram spec={spec} active={cur.set} hot={cur.fired} />
       <InputBar value={w} onChange={(v) => { setW(v); s.restart(); }} onEnter={s.toggle} presets={presets} />
       <Transport s={s} stepWord="symbol" />
-      <div className="tape" aria-label="Input tape">
+      <div className="tape" aria-label="Input tape" data-scroll="x">
         {w.length === 0 && <span className="cell next">ε</span>}
         {[...w].map((c, i) => (
           <span key={i} className={`cell${i < k ? ' done' : i === k && !finished ? ' next' : ''}`}>{c}</span>
@@ -80,7 +80,7 @@ export function FASim({
         )}
       </div>
       {!hideTrace && (
-        <div className="trace" aria-label="Trace">
+        <div className="trace" aria-label="Trace" data-scroll="y">
           {frames.slice(0, k + 1).map((f, i) => (
             <div key={i} className={i === k ? 'cur' : ''}>
               {i === 0 ? `start ${fmt(f.set)}` : `${fmt(frames[i - 1].set)} —${w[i - 1]}→ ${fmt(f.set)}`}

@@ -38,7 +38,7 @@ export function Note({ kind, title, children }: { kind: keyof typeof NOTE; title
 
 export function Table({ children }: { children: ReactNode }) {
   return (
-    <div className="table">
+    <div className="table" data-scroll="x">
       <table>{children}</table>
     </div>
   );

@@ -101,7 +101,7 @@ export function ParserDemo({ initial = 'a + b * c' }: { initial?: string }) {
           <button key={p} type="button" className="preset" onClick={() => { setSrc(p); st.restart(); }}>{p}</button>
         ))}
       </div>
-      <div className="tape" aria-label="Tokens">
+      <div className="tape" aria-label="Tokens" data-scroll="x">
         {toks.map((t, i) => (
           <span key={i} className={`cell${i < f.pos ? ' done' : i === f.pos ? ' head' : ''}`}>{t.text}</span>
         ))}
