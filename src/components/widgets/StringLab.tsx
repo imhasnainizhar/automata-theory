@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Panel } from '../machines/Controls';
+import { Panel, Segmented } from '../machines/Controls';
 
 const words = (sigma: string[], k: number): string[] => (k === 0 ? [''] : words(sigma, k - 1).flatMap((w) => sigma.map((a) => w + a)));
 
@@ -35,11 +35,16 @@ export function StringLab() {
   return (
     <Panel tag="Interactive" title="String lab"
       actions={
-        <div className="tabs">
-          <button type="button" className={`tab${tab === 'sigma' ? ' on' : ''}`} onClick={() => setTab('sigma')}>Σᵏ</button>
-          <button type="button" className={`tab${tab === 'ops' ? ' on' : ''}`} onClick={() => setTab('ops')}>String operations</button>
-          <button type="button" className={`tab${tab === 'star' ? ' on' : ''}`} onClick={() => setTab('star')}>Kleene star</button>
-        </div>
+        <Segmented
+          label="Tool"
+          value={tab}
+          onChange={setTab}
+          options={[
+            { value: 'sigma', label: 'Σᵏ' },
+            { value: 'ops', label: 'Operations' },
+            { value: 'star', label: 'Kleene star' },
+          ]}
+        />
       }>
       {tab === 'sigma' && (
         <>

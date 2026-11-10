@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Icon, type IconName } from '../Icon';
+import type { IconName } from '../Icon';
+import { Segmented } from '../machines/Controls';
 import { FASim } from '../machines/FASim';
 import { PDASim } from '../machines/PDASim';
 import { TMSim } from '../machines/TMSim';
@@ -15,20 +16,15 @@ const TABS: { id: string; label: string; icon: IconName; memory: string }[] = [
 ];
 
 export function HeroPlayground() {
-  const [tab, setTab] = useState('fa');
+  const [tab, setTab] = useState<string>('fa');
   const t = TABS.find((x) => x.id === tab)!;
   return (
     <div className="hero-pane glass">
       <div className="pane-top">
         <div className="traffic" aria-hidden="true"><i /><i /><i /></div>
-        <div className="tabs" role="tablist" aria-label="Choose a machine">
-          {TABS.map((x) => (
-            <button key={x.id} type="button" role="tab" aria-selected={tab === x.id} className={`tab${tab === x.id ? ' on' : ''}`} onClick={() => setTab(x.id)}>
-              <Icon name={x.icon} />
-              {x.label}
-            </button>
-          ))}
-        </div>
+      </div>
+      <div className="pane-seg">
+        <Segmented label="Choose a machine" value={tab} onChange={setTab} options={TABS.map((x) => ({ value: x.id, label: x.label, icon: x.icon }))} />
       </div>
       <div key={tab}>
         {tab === 'fa' && (

@@ -1,9 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Panel } from '../machines/Controls';
-import { useAutoplay } from '../machines/useAutoplay';
-import { Icon } from '../Icon';
+import { Panel, Transport } from '../machines/Controls';
+import { useStepper } from '../machines/useAutoplay';
 import { TreeView, type TNode } from './TreeView';
 
 const NT = ['E', "E'", 'T', "T'", 'F'] as const;
@@ -84,13 +83,9 @@ const PARTS: { id: Part; name: string; color: string; text: string }[] = [
 export function ParserDemo({ initial = 'a + b * c' }: { initial?: string }) {
   const [src, setSrc] = useState(initial);
   const { frames, toks } = useMemo(() => parse(src), [src]);
-  const [k, setK] = useState(0);
   const last = frames.length - 1;
-  const [playing, setPlaying] = useAutoplay(() => {
-    if (k >= last) return false;
-    setK(k + 1);
-    return k + 1 < last;
-  }, 800);
+  const st = useStepper(last, 800);
+  const k = Math.min(st.k, last);
   const f = frames[Math.min(k, last)];
   const focus = new Set(f.focus);
 
@@ -99,11 +94,11 @@ export function ParserDemo({ initial = 'a + b * c' }: { initial?: string }) {
       caption="A top-down LL(1) parser for arithmetic expressions. The stack holds the part of the sentence still to be matched; the table decides every move from the stack top and one token of lookahead.">
       <div className="field" style={{ marginBottom: 10 }}>
         <label>Expression</label>
-        <input value={src} spellCheck={false} onChange={(e) => { setSrc(e.target.value.slice(0, 30)); setK(0); setPlaying(false); }} aria-label="Expression" />
+        <input value={src} spellCheck={false} onChange={(e) => { setSrc(e.target.value.slice(0, 30)); st.restart(); }} aria-label="Expression" />
       </div>
       <div className="presets">
         {['a + b * c', '(a + b) * c', 'x * (y + 2)', 'a + * b'].map((p) => (
-          <button key={p} type="button" className="preset" onClick={() => { setSrc(p); setK(0); setPlaying(false); }}>{p}</button>
+          <button key={p} type="button" className="preset" onClick={() => { setSrc(p); st.restart(); }}>{p}</button>
         ))}
       </div>
       <div className="tape" aria-label="Tokens">
@@ -122,20 +117,14 @@ export function ParserDemo({ initial = 'a + b * c' }: { initial?: string }) {
           <TreeView root={f.tree} fresh={f.fresh} maxWidth={560} />
         </div>
       </div>
-      <div className="controls">
-        <button type="button" className="pill-btn" onClick={() => { setK(0); setPlaying(false); }}><Icon name="reset" /> Reset</button>
-        <button type="button" className="pill-btn" disabled={k >= last} onClick={() => setK(Math.min(k + 1, last))}><Icon name="step" /> Step</button>
-        <button type="button" className="pill-btn primary" onClick={() => (playing ? setPlaying(false) : (k >= last && setK(0), setPlaying(true)))}>
-          <Icon name={playing ? 'pause' : 'play'} /> {playing ? 'Pause' : 'Run'}
-        </button>
-      </div>
+      <Transport s={st} stepWord="step" />
       <div className="status" aria-live="polite">
         {f.done && <span className={`verdict ${f.done === 'ok' ? 'ok' : 'bad'}`}>{f.done === 'ok' ? '✓ Parsed' : '✗ Syntax error'}</span>} {f.note}
       </div>
       <div className="table" style={{ marginTop: 12 }}>
         <table aria-label="LL(1) parsing table">
           <thead>
-            <tr><th />{TERMS.map((t) => <th key={t} className="c">{t}</th>)}</tr>
+            <tr><th />{TERMS.map((t) => <th key={t} className="c" style={{ textTransform: 'none', fontFamily: 'var(--font-mono)' }}>{t}</th>)}</tr>
           </thead>
           <tbody>
             {NT.map((n) => (

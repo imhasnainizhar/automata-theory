@@ -2,9 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { StateDiagram } from '../machines/StateDiagram';
-import { Panel } from '../machines/Controls';
-import { useAutoplay } from '../machines/useAutoplay';
-import { Icon } from '../Icon';
+import { Panel, Transport } from '../machines/Controls';
+import { useStepper } from '../machines/useAutoplay';
 import { lexerDFA } from '@/content/specs';
 
 type Kind = 'ID' | 'NUM' | 'OP' | 'PUNC' | 'KW';
@@ -77,13 +76,9 @@ const PARTS: { id: Part; name: string; color: string; text: string }[] = [
 export function LexerDemo({ initial = 'let total = price * 12 + tax1;' }: { initial?: string }) {
   const [src, setSrc] = useState(initial);
   const steps = useMemo(() => lex(src), [src]);
-  const [k, setK] = useState(0);
   const last = steps.length - 1;
-  const [playing, setPlaying] = useAutoplay(() => {
-    if (k >= last) return false;
-    setK(k + 1);
-    return k + 1 < last;
-  }, 650);
+  const st = useStepper(last, 650);
+  const k = Math.min(st.k, last);
   const s = steps[Math.min(k, last)];
   const focus = new Set(s.focus);
 
@@ -92,7 +87,7 @@ export function LexerDemo({ initial = 'let total = price * 12 + tax1;' }: { init
       caption="Lexers are the first stage of every compiler. Because each token type is a regular language, a single DFA can recognise all of them.">
       <div className="field" style={{ marginBottom: 10 }}>
         <label>Code</label>
-        <input value={src} spellCheck={false} onChange={(e) => { setSrc(e.target.value.slice(0, 48)); setK(0); setPlaying(false); }} aria-label="Source code" />
+        <input value={src} spellCheck={false} onChange={(e) => { setSrc(e.target.value.slice(0, 48)); st.restart(); }} aria-label="Source code" />
       </div>
       <div className="src" aria-label="Source characters">
         {[...src].map((c, i) => {
@@ -103,13 +98,7 @@ export function LexerDemo({ initial = 'let total = price * 12 + tax1;' }: { init
       <div style={{ marginTop: 12 }}>
         <StateDiagram spec={lexerDFA} active={new Set([s.state])} hot={s.edge !== null ? new Set([s.edge]) : new Set()} label="Scanner DFA" />
       </div>
-      <div className="controls">
-        <button type="button" className="pill-btn" onClick={() => { setK(0); setPlaying(false); }}><Icon name="reset" /> Reset</button>
-        <button type="button" className="pill-btn" disabled={k >= last} onClick={() => setK(Math.min(k + 1, last))}><Icon name="step" /> Next character</button>
-        <button type="button" className="pill-btn primary" onClick={() => (playing ? setPlaying(false) : (k >= last && setK(0), setPlaying(true)))}>
-          <Icon name={playing ? 'pause' : 'play'} /> {playing ? 'Pause' : 'Run'}
-        </button>
-      </div>
+      <Transport s={st} stepWord="character" />
       <div className="status" aria-live="polite">{s.note}</div>
       <div className="tokens" aria-label="Tokens">
         {s.tokens.map((t, i) => (

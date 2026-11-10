@@ -2,9 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { StateDiagram } from '../machines/StateDiagram';
-import { Panel } from '../machines/Controls';
-import { useAutoplay } from '../machines/useAutoplay';
-import { Icon } from '../Icon';
+import { Panel, Transport } from '../machines/Controls';
+import { useStepper } from '../machines/useAutoplay';
 import { cpuControl } from '@/content/specs';
 
 type Instr = { op: 'LOAD' | 'SUB' | 'JNZ' | 'HALT'; arg?: number };
@@ -49,13 +48,9 @@ function simulate(): Frame[] {
 
 export function CpuDemo() {
   const frames = useMemo(simulate, []);
-  const [k, setK] = useState(0);
   const last = frames.length - 1;
-  const [playing, setPlaying] = useAutoplay(() => {
-    if (k >= last) return false;
-    setK(k + 1);
-    return k + 1 < last;
-  }, 900);
+  const st = useStepper(last, 900);
+  const k = Math.min(st.k, last);
   const f = frames[k];
   const focus = new Set(f.focus);
 
@@ -80,13 +75,7 @@ export function CpuDemo() {
           </div>
         </div>
       </div>
-      <div className="controls">
-        <button type="button" className="pill-btn" onClick={() => { setK(0); setPlaying(false); }}><Icon name="reset" /> Reset</button>
-        <button type="button" className="pill-btn" disabled={k >= last} onClick={() => setK(Math.min(k + 1, last))}><Icon name="step" /> Clock tick</button>
-        <button type="button" className="pill-btn primary" onClick={() => (playing ? setPlaying(false) : (k >= last && setK(0), setPlaying(true)))}>
-          <Icon name={playing ? 'pause' : 'play'} /> {playing ? 'Pause' : 'Run'}
-        </button>
-      </div>
+      <Transport s={st} stepWord="tick" />
       <div className="status" aria-live="polite"><b>{f.phase}.</b> {f.note}</div>
       <div className="explain">
         {PARTS.map((p) => (

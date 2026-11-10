@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { buildFA, faClosure, faStep, type MachineSpec } from '@/lib/machines';
 import { StateDiagram } from './StateDiagram';
-import { Panel, SimControls, Verdict } from './Controls';
-import { useAutoplay } from './useAutoplay';
+import { InputBar, Panel, Transport, Verdict } from './Controls';
+import { useStepper } from './useAutoplay';
 
 const fmt = (s: Set<string>) => (s.size ? `{${[...s].join(', ')}}` : '∅');
 
@@ -30,8 +30,8 @@ export function FASim({
   const delta = useMemo(() => buildFA(spec), [spec]);
   const accept = useMemo(() => new Set(spec.accept ?? []), [spec]);
   const [w, setW] = useState(initial);
-  const [k, setK] = useState(0);
 
+  // every frame of the run, computed once per input
   const frames = useMemo(() => {
     const fired0 = new Set<number>();
     const out = [{ set: faClosure(delta, new Set([spec.start!]), fired0), fired: fired0 }];
@@ -43,47 +43,19 @@ export function FASim({
     return out;
   }, [delta, spec.start, w]);
 
-  const last = frames.length - 1;
-  const done = k >= last;
-  const [playing, setPlaying] = useAutoplay(() => {
-    if (k >= last) return false;
-    setK(k + 1);
-    return k + 1 < last;
-  }, 560);
-
-  useEffect(() => {
-    if (autoplay) {
-      setK(0);
-      const t = setTimeout(() => setPlaying(true), 700);
-      return () => clearTimeout(t);
-    }
-  }, [autoplay, setPlaying]);
-
-  const cur = frames[Math.min(k, last)];
+  const s = useStepper(frames.length - 1, 620, { autoplay });
+  const k = Math.min(s.k, frames.length - 1);
+  const cur = frames[k];
   const nondet = spec.kind === 'nfa';
   const stuck = cur.set.size === 0;
-  const finished = done && (k === w.length || stuck);
+  const finished = s.atEnd && (k === w.length || stuck);
   const ok = [...cur.set].some((q) => accept.has(q));
-
-  const change = (v: string) => { setW(v); setK(0); setPlaying(false); };
 
   return (
     <Panel title={title} tag={tag} caption={caption}>
       <StateDiagram spec={spec} active={cur.set} hot={cur.fired} />
-      <SimControls
-        value={w}
-        onChange={change}
-        presets={presets}
-        onReset={() => { setK(0); setPlaying(false); }}
-        onStep={() => setK((x) => Math.min(x + 1, last))}
-        canStep={!done}
-        playing={playing}
-        onTogglePlay={() => {
-          if (playing) return setPlaying(false);
-          if (done) setK(0);
-          setPlaying(true);
-        }}
-      />
+      <InputBar value={w} onChange={(v) => { setW(v); s.restart(); }} onEnter={s.toggle} presets={presets} />
+      <Transport s={s} stepWord="symbol" />
       <div className="tape" aria-label="Input tape">
         {w.length === 0 && <span className="cell next">ε</span>}
         {[...w].map((c, i) => (

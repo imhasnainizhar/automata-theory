@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { buildFA, faClosure, faStep, type MachineSpec } from '@/lib/machines';
 import { StateDiagram } from '../machines/StateDiagram';
-import { Panel } from '../machines/Controls';
-import { Icon } from '../Icon';
+import { Panel, Transport } from '../machines/Controls';
+import { useStepper } from '../machines/useAutoplay';
 
 const name = (s: Set<string>) => (s.size ? `{${[...s].sort().join(',')}}` : '∅');
 
@@ -24,8 +24,9 @@ export function SubsetConstruction({ spec, alphabet }: { spec: MachineSpec; alph
     }
     return out;
   }, [spec, alphabet]);
-  const [k, setK] = useState(0);
-  const cur = rows[Math.min(k, rows.length - 1)];
+  const st = useStepper(rows.length - 1, 1100);
+  const k = Math.min(st.k, rows.length - 1);
+  const cur = rows[k];
 
   return (
     <Panel tag="Step through" title="The subset construction, one row at a time"
@@ -45,11 +46,8 @@ export function SubsetConstruction({ spec, alphabet }: { spec: MachineSpec; alph
           </tbody>
         </table>
       </div>
-      <div className="controls">
-        <button type="button" className="pill-btn" onClick={() => setK(0)}><Icon name="reset" /> Reset</button>
-        <button type="button" className="pill-btn primary" disabled={k >= rows.length - 1} onClick={() => setK(k + 1)}><Icon name="step" /> Next row</button>
-        <span className="status" style={{ marginTop: 0 }}>{k >= rows.length - 1 ? `Done: ${rows.length} reachable DFA states.` : `Highlighted: the NFA states in ${name(cur.from)}.`}</span>
-      </div>
+      <Transport s={st} stepWord="row" />
+      <div className="status">{k >= rows.length - 1 ? `Done: ${rows.length} reachable DFA states.` : `Highlighted: the NFA states in ${name(cur.from)}.`}</div>
     </Panel>
   );
 }

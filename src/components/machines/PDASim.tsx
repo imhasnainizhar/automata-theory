@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { pdaPath, runPDA, type MachineSpec, type PDAConfig } from '@/lib/machines';
 import { StateDiagram } from './StateDiagram';
-import { Panel, SimControls, Verdict } from './Controls';
-import { useAutoplay } from './useAutoplay';
+import { InputBar, Panel, Segmented, Transport, Verdict } from './Controls';
+import { useStepper } from './useAutoplay';
 
 function BigStack({ st }: { st: string }) {
   const items = [...st].reverse(); // bottom first
@@ -43,7 +43,6 @@ export function PDASim({
   const [w, setW] = useState(initial);
   const run = useMemo(() => runPDA(spec, w), [spec, w]);
   const [mode, setMode] = useState<'worlds' | 'branch'>(view ?? (run.deterministic ? 'branch' : 'worlds'));
-  const [k, setK] = useState(0);
 
   const path = useMemo<PDAConfig[]>(() => {
     if (run.accepted) return pdaPath(run, run.accepted);
@@ -53,21 +52,9 @@ export function PDASim({
 
   const steps = mode === 'branch' ? path.length : run.frames.length;
   const last = Math.max(0, steps - 1);
-  const done = k >= last;
-
-  const [playing, setPlaying] = useAutoplay(() => {
-    if (k >= last) return false;
-    setK(k + 1);
-    return k + 1 < last;
-  }, mode === 'branch' ? 620 : 800);
-
-  useEffect(() => {
-    if (!autoplay) return;
-    const t = setTimeout(() => setPlaying(true), 700);
-    return () => clearTimeout(t);
-  }, [autoplay, setPlaying]);
-
-  const change = (v: string) => { setW(v); setK(0); setPlaying(false); };
+  const st = useStepper(last, mode === 'branch' ? 640 : 820, { autoplay });
+  const k = Math.min(st.k, last);
+  const done = st.atEnd;
   const accepted = !!run.accepted;
 
   let active = new Set<string>(), hot = new Set<number>(), body: ReactNode = null, pos = 0, status: ReactNode;
@@ -138,28 +125,21 @@ export function PDASim({
       caption={caption}
       actions={
         !run.deterministic || view ? (
-          <div className="tabs" role="tablist">
-            <button type="button" className={`tab${mode === 'worlds' ? ' on' : ''}`} onClick={() => { setMode('worlds'); setK(0); setPlaying(false); }}>Parallel worlds</button>
-            <button type="button" className={`tab${mode === 'branch' ? ' on' : ''}`} onClick={() => { setMode('branch'); setK(0); setPlaying(false); }}>{accepted ? 'Accepting branch' : 'Longest branch'}</button>
-          </div>
+          <Segmented
+            label="View"
+            value={mode}
+            onChange={(m) => { setMode(m); st.restart(); }}
+            options={[
+              { value: 'worlds', label: 'Parallel worlds' },
+              { value: 'branch', label: accepted ? 'Accepting branch' : 'Longest branch' },
+            ]}
+          />
         ) : undefined
       }
     >
       <StateDiagram spec={spec} active={active} hot={hot} />
-      <SimControls
-        value={w}
-        onChange={change}
-        presets={presets}
-        onReset={() => { setK(0); setPlaying(false); }}
-        onStep={() => setK((x) => Math.min(x + 1, last))}
-        canStep={!done}
-        playing={playing}
-        onTogglePlay={() => {
-          if (playing) return setPlaying(false);
-          if (done) setK(0);
-          setPlaying(true);
-        }}
-      />
+      <InputBar value={w} onChange={(v) => { setW(v); st.restart(); }} onEnter={st.toggle} presets={presets} />
+      <Transport s={st} stepWord={mode === 'branch' ? 'move' : 'symbol'} />
       <div className="tape">
         {w.length === 0 && <span className="cell next">ε</span>}
         {[...w].map((c, i) => (

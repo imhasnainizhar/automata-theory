@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import {
   BLANK, LEFT_END, RIGHT_END, buildTM, isDeterministicTM, tmConfigString, tmInitial, tmKey, tmSuccessors,
   type MachineSpec, type TMConfig,
 } from '@/lib/machines';
 import { StateDiagram } from './StateDiagram';
-import { Panel, SimControls, Verdict } from './Controls';
-import { useAutoplay } from './useAutoplay';
+import { InputBar, Panel, Transport, Verdict } from './Controls';
+import { useStepper } from './useAutoplay';
 
 const MAX_STEPS = 3000;
 const MAX_LEVELS = 80;
@@ -39,7 +39,6 @@ export function TMSim({
   const accept = useMemo(() => new Set(spec.accept ?? []), [spec]);
   const reject = useMemo(() => new Set(spec.reject ?? []), [spec]);
   const [w, setW] = useState(initial);
-  const [k, setK] = useState(0);
 
   /** deterministic: a list of configurations; nondeterministic: a list of frontiers */
   const sim = useMemo(() => {
@@ -82,23 +81,13 @@ export function TMSim({
   }, [spec, delta, det, w, accept, reject]);
 
   const last = sim.frames.length - 1;
-  const done = k >= last;
-  const [playing, setPlaying] = useAutoplay(() => {
-    if (k >= last) return false;
-    setK(k + 1);
-    return k + 1 < last;
-  }, det ? speed : 750);
-
-  useEffect(() => {
-    if (!autoplay) return;
-    const t = setTimeout(() => setPlaying(true), 700);
-    return () => clearTimeout(t);
-  }, [autoplay, setPlaying]);
+  const st = useStepper(last, det ? speed : 760, { autoplay });
+  const k = Math.min(st.k, last);
+  const done = st.atEnd;
 
   const frame = sim.frames[Math.min(k, last)];
   const active = new Set(frame.map((c) => c.q));
   const hot = new Set(frame.filter((c) => c.g !== null).map((c) => c.g!));
-  const change = (v: string) => { setW(v); setK(0); setPlaying(false); };
 
   const c0 = frame[0];
   const lba = spec.kind === 'lba';
@@ -141,20 +130,8 @@ export function TMSim({
   return (
     <Panel title={title} tag={tag} caption={caption}>
       <StateDiagram spec={spec} active={active} hot={hot} />
-      <SimControls
-        value={w}
-        onChange={change}
-        presets={presets}
-        onReset={() => { setK(0); setPlaying(false); }}
-        onStep={() => setK((x) => Math.min(x + 1, last))}
-        canStep={!done}
-        playing={playing}
-        onTogglePlay={() => {
-          if (playing) return setPlaying(false);
-          if (done) setK(0);
-          setPlaying(true);
-        }}
-      />
+      <InputBar value={w} onChange={(v) => { setW(v); st.restart(); }} onEnter={st.toggle} presets={presets} />
+      <Transport s={st} stepWord={det ? 'step' : 'move'} />
       {tapeView}
       <div className="status" aria-live="polite">
         {done ? (
