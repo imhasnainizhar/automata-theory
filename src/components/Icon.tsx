@@ -90,6 +90,27 @@ const paths = {
   arrowLeft: <path d="M19 12H5m5-5-5 5 5 5" />,
   external: <path d="M7 17 17 7M9 7h8v8" />,
   chevron: <path d="m9 6 6 6-6 6" />,
+  stepBack: (
+    <>
+      <path d="M18 5.5v13L9.5 12z" />
+      <path d="M6 5v14" />
+    </>
+  ),
+  skipBack: (
+    <>
+      <path d="M11.5 6v12L4 12z" />
+      <path d="M20 6v12l-7.5-6z" />
+    </>
+  ),
+  crosshair: (
+    <>
+      <circle cx="12" cy="12" r="7" />
+      <circle cx="12" cy="12" r="2" />
+      <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+    </>
+  ),
+  expand: <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />,
+  shrink: <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />,
   home: <path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z" />,
   book: (
     <>
