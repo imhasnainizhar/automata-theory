@@ -7,6 +7,7 @@ import { Brand } from './Brand';
 import { ChapterNav } from './ChapterNav';
 import { GitHubButton } from './GitHubButton';
 import { Icon } from './Icon';
+import { Dock, mobileDockWidth, type DockItem } from './Dock';
 import { CHAPTERS, chapterIndex } from '@/content/chapters';
 import { site } from '@/lib/site';
 
@@ -97,6 +98,22 @@ export function SiteChrome({ stars }: { stars: number | null }) {
   const next = idx >= 0 && idx < CHAPTERS.length - 1 ? CHAPTERS[idx + 1] : null;
   const onLearn = pathname.startsWith('/learn');
 
+  const dockItems: DockItem[] = [
+    { key: 'home', label: 'Home', icon: 'home', href: '/', active: pathname === '/' },
+    ...(onLearn
+      ? [
+          { key: 'chapters', label: 'Chapters', icon: 'book', href: '/learn', active: pathname === '/learn' },
+          { key: 'prev', label: 'Prev', icon: 'arrowLeft', href: prev ? `/learn/${prev.slug}` : '#', disabled: !prev },
+          { key: 'next', label: 'Next', icon: 'arrowRight', href: next ? `/learn/${next.slug}` : '#', disabled: !next },
+        ]
+      : [
+          { key: 'start', label: 'Start', icon: 'play', href: '/learn/introduction' },
+          { key: 'chapters', label: 'Chapters', icon: 'book', href: '/learn' },
+          // no GitHub on the phone dock: the menu sheet already has it
+          ...(mobile ? [] : [{ key: 'github', label: 'GitHub', icon: 'github', href: site.repoUrl, external: true }]),
+        ]),
+  ] as DockItem[];
+
   return (
     <>
       <header className={navClass}>
@@ -121,6 +138,7 @@ export function SiteChrome({ stars }: { stars: number | null }) {
       <button
         type="button"
         className={`menu-fab${fab === 'top' ? '' : ` ${fab}`}${open ? ' open' : ''}`}
+        style={{ ['--fw' as string]: `${mobileDockWidth(dockItems.length)}px` }}
         tabIndex={fab === 'gone-up' || fab === 'gone-down' ? -1 : undefined}
         aria-label={open ? 'Close menu' : 'Open menu'}
         aria-expanded={open}
@@ -129,43 +147,7 @@ export function SiteChrome({ stars }: { stars: number | null }) {
         <Icon name={open ? 'close' : 'menu'} />
       </button>
 
-      <nav className={`dock glass${dockVisible ? ' shown' : ''}${mobile && merged ? ' merged' : ''}`} aria-label="Quick navigation" inert={!dockVisible}>
-        <Link href="/" className={pathname === '/' ? 'active' : ''}>
-          <Icon name="home" />
-          <span>Home</span>
-        </Link>
-        {onLearn ? (
-          <>
-            <Link href="/learn" className={pathname === '/learn' ? 'active' : ''}>
-              <Icon name="book" />
-              <span>Chapters</span>
-            </Link>
-            <Link href={prev ? `/learn/${prev.slug}` : '#'} aria-disabled={!prev}>
-              <Icon name="arrowLeft" />
-              <span>Prev</span>
-            </Link>
-            <Link href={next ? `/learn/${next.slug}` : '#'} aria-disabled={!next}>
-              <Icon name="arrowRight" />
-              <span>Next</span>
-            </Link>
-          </>
-        ) : (
-          <>
-            <Link href="/learn/introduction">
-              <Icon name="play" />
-              <span>Start</span>
-            </Link>
-            <Link href="/learn">
-              <Icon name="book" />
-              <span>Chapters</span>
-            </Link>
-            <a href={site.repoUrl} target="_blank" rel="noreferrer">
-              <Icon name="github" />
-              <span>GitHub</span>
-            </a>
-          </>
-        )}
-      </nav>
+      <Dock items={dockItems} className={`dock glass${dockVisible ? ' shown' : ''}${mobile && merged ? ' merged' : ''}`} inert={!dockVisible} />
 
       <div className={`sheet-scrim${open ? ' open' : ''}`} onClick={() => setOpen(false)} />
       <div className={`sheet glass${open ? ' open' : ''}`} role="dialog" aria-modal="true" aria-label="Menu" aria-hidden={!open}>

@@ -117,6 +117,8 @@ button { font: inherit; color: inherit; }
 .btn-glass:hover { background: var(--glass-strong); color: var(--ink); }
 .btn-sm { height: 36px; padding: 0 14px; font-size: 14px; }
 .btn-lg { height: 52px; padding: 0 24px; font-size: 16px; }
+.btn .ext { width: 14px; height: 14px; margin-left: -4px; color: var(--clay); stroke-width: 2.2; transition: transform .2s ease; }
+.btn:hover .ext { transform: translate(2px, -2px); }
 .star-count { display: inline-flex; align-items: center; gap: 4px; padding-left: 10px; margin-left: 2px; border-left: 1px solid var(--line); font-variant-numeric: tabular-nums; color: var(--ink-2); }
 .star-count svg { width: 14px; height: 14px; color: var(--ochre); }
 
@@ -145,35 +147,43 @@ button { font: inherit; color: inherit; }
 .nav-spacer { flex: 1; }
 .nav-actions { display: flex; gap: 8px; align-items: center; }
 
-/* ---------- Dock (desktop: centred and compact; mobile: full width with the menu slot) ---------- */
+/* ---------- Dock (desktop: centred and compact; mobile: smaller, centred, with the menu slot) ---------- */
 .menu-fab { display: none; }
 .dock {
   display: flex; align-items: center; gap: 4px;
   position: fixed; z-index: 70; bottom: 18px; left: 50%; height: 64px; padding: 8px;
   border-radius: 999px; pointer-events: none;
   transform: translate(-50%, calc(100% + 40px)); opacity: 0;
-  transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .35s ease, right .45s cubic-bezier(.3,1.2,.5,1), padding .45s cubic-bezier(.3,1.2,.5,1);
+  transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .35s ease, padding .45s cubic-bezier(.3,1.2,.5,1);
 }
 .dock.shown { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
-.dock a, .dock button {
-  position: relative; width: 78px; height: 48px; border-radius: 999px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-  color: var(--ink-2); text-decoration: none; background: none; border: 0; cursor: pointer; padding: 0;
-  font: 600 10.5px/1 var(--font-sans); letter-spacing: .01em;
-  transition: background-color .2s ease, color .2s ease, transform .2s cubic-bezier(.3,1.4,.5,1), box-shadow .2s ease;
-  -webkit-tap-highlight-color: transparent;
+
+/* one highlight that slides between items: rests on the active item, follows hover/focus */
+.dock-pill {
+  position: absolute; top: 8px; left: 0; height: 48px; border-radius: 999px; pointer-events: none;
+  background: #fffdf8; border: 1px solid rgba(221,210,191,.9);
+  box-shadow: 0 6px 16px -8px rgba(60,45,25,.5), 0 1px 0 rgba(255,255,255,.9) inset;
+  transition: transform .4s cubic-bezier(.3,1.25,.5,1), width .4s cubic-bezier(.3,1.25,.5,1), opacity .2s ease;
 }
-.dock a svg, .dock button svg { width: 20px; height: 20px; transition: transform .25s cubic-bezier(.3,1.5,.5,1); }
-/* hover: lift the pill and nudge the icon */
-.dock a:hover { background: rgba(255,255,255,.72); color: var(--ink); box-shadow: 0 4px 14px -8px rgba(60,45,25,.45); }
-.dock a:hover svg { transform: translateY(-2px) scale(1.08); }
-/* press: squash */
-.dock a:active { transform: scale(.9); background: rgba(255,255,255,.95); box-shadow: none; }
-.dock a:active svg { transform: scale(.92); }
-.dock a:focus-visible { outline: 2px solid var(--clay); outline-offset: -2px; }
-.dock a.active { color: var(--moss-deep); background: rgba(255,255,255,.6); }
-.dock a.active::after { content: ""; position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%; background: var(--moss); }
-.dock a[aria-disabled="true"] { opacity: .35; pointer-events: none; }
+.dock-item {
+  position: relative; z-index: 1; flex: none; width: 78px; height: 48px; border-radius: 999px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  color: var(--ink-2); text-decoration: none; cursor: pointer;
+  transition: color .2s ease, transform .22s cubic-bezier(.3,1.4,.5,1);
+  -webkit-tap-highlight-color: transparent; outline: none;
+}
+.dock-item.lit { color: var(--ink); }
+.dock-item.active { color: var(--moss-deep); }
+.dock-item.active .dock-label { font-weight: 700; }
+.dock-icon { position: relative; display: grid; place-items: center; }
+.dock-icon svg { width: 20px; height: 20px; transition: transform .25s cubic-bezier(.3,1.5,.5,1); }
+.dock-icon .dock-ext { position: absolute; top: -4px; right: -11px; width: 11px; height: 11px; stroke-width: 2.2; color: var(--clay); }
+.dock-item:hover .dock-icon > svg:first-child { transform: translateY(-2px) scale(1.06); }
+.dock-item:hover .dock-ext { transform: translate(1px, -1px); }
+.dock-item:active { transform: scale(.9); }
+.dock-item:focus-visible .dock-label { text-decoration: underline; text-underline-offset: 3px; }
+.dock-label { font: 600 10.5px/1 var(--font-sans); letter-spacing: .01em; }
+.dock-item[aria-disabled="true"] { opacity: .35; pointer-events: none; }
 
 @media (max-width: 860px) {
   .nav-links, .floatnav .nav-actions { display: none; }
@@ -196,12 +206,13 @@ button { font: inherit; color: inherit; }
   .menu-fab:active svg { transform: scale(.85); }
   /* Travel straight down into the dock's reserved slot, growing from normal size as it goes.
      Slot centre: 100dvh - 14px (dock bottom) - 32px (half dock); start centre: 18px + 24px. */
-  .menu-fab.docked { transform: translateY(calc(100dvh - 88px)) scale(1.14); }
-  .menu-fab.docked:hover { background: rgba(255,255,255,.72); }
-  .menu-fab.docked:active { background: rgba(255,255,255,.95); }
+  /* --fw is the merged dock width (set from JS). Slot centre x = 50vw + fw/2 - 32px; button centre x = 100vw - 46px.
+     Slot centre y = 100dvh - 44px; button centre y = 42px. */
+  .menu-fab.docked { transform: translate(calc(-50vw + var(--fw) / 2 + 14px), calc(100dvh - 86px)) scale(1.08); }
+  .menu-fab.docked:hover svg { transform: scale(1.08); }
   /* leaves the screen together with the dock (same offset and timing as .dock) */
   .menu-fab.gone-down {
-    transform: translateY(calc(100dvh - 88px + 64px + 40px)) scale(1.14); opacity: 0;
+    transform: translate(calc(-50vw + var(--fw) / 2 + 14px), calc(100dvh - 86px + 60px + 40px)) scale(1.08); opacity: 0;
     transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .35s ease;
   }
   /* leaves upwards together with the top nav */
@@ -211,15 +222,13 @@ button { font: inherit; color: inherit; }
   }
   .menu-fab.open { transform: none; opacity: 1; }
 
-  /* Compact while the menu button is elsewhere (4 items only);
-     widens to make room as the button arrives (.merged). */
-  .dock {
-    left: 14px; right: 76px; bottom: 14px; padding: 8px 10px;
-    transform: translateY(calc(100% + 40px));
-  }
-  .dock.merged { right: 14px; padding-right: 68px; }
-  .dock.shown { transform: none; }
-  .dock a, .dock button { flex: 1; width: auto; }
+  /* Smaller and centred. Compact while the menu button is elsewhere;
+     widens on the right to make room as the button arrives (.merged). */
+  .dock { bottom: 14px; height: 60px; padding: 6px; gap: 2px; transform: translate(-50%, calc(100% + 40px)); }
+  .dock.shown { transform: translate(-50%, 0); }
+  .dock.merged { padding-right: 60px; } /* 6px pad + 2px gap + 52px slot */
+  .dock-pill { top: 6px; }
+  .dock-item { width: 58px; }
 }
 
 /* ---------- Menu sheet ---------- */
