@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Regular Expressions · Automata A to Z</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script defer src="assets/automata.js"></script>
+<script defer src="assets/site.js"></script>
+</head>
+<body data-page="05-regex">
+<main id="content">
+<article class="prose">
+<div class="kicker">Chapter 5 · Regular Languages</div>
+<h1>Regular Expressions</h1>
+<p class="lede">Automata describe languages as <em>machines</em>; regular expressions describe them as <em>formulas</em>. Kleene’s theorem says the two describe exactly the same languages — and the proof gives the algorithms behind every regex engine.</p>
+<div class="chapter-meta"><span class="chip">⏱ 60 min</span><span class="chip">Prerequisite: Chapter 4</span></div>
+
+<h2>The intuition</h2>
+<div class="box intuition">
+  <div class="box-title">Intuition — patterns from three operations</div>
+  <p>Every regular pattern can be built from single symbols using only three ideas:</p>
+  <ul>
+    <li><strong>or</strong> (union): “a <code>cat</code> or a <code>dog</code>”;</li>
+    <li><strong>then</strong> (concatenation): “a digit, then a letter”;</li>
+    <li><strong>repeat</strong> (star): “any number of digits, possibly none”.</li>
+  </ul>
+  <p>That is the complete toolkit. There is no “count”, no “remember”, no “match the same thing again”. Which is precisely why regular expressions correspond to <em>finite</em> memory.</p>
+</div>
+
+<h2>Definition</h2>
+<div class="box definition">
+  <div class="box-title">Definition — regular expressions over Σ (inductive)</div>
+  <p>Base cases:</p>
+  <ul>
+    <li>$a$ for each $a \in \Sigma$ is a regular expression, with $L(a) = \{a\}$;</li>
+    <li>$\varepsilon$ is a regular expression, with $L(\varepsilon) = \{\varepsilon\}$;</li>
+    <li>$\emptyset$ is a regular expression, with $L(\emptyset) = \emptyset$.</li>
+  </ul>
+  <p>Inductive cases, if $R_1, R_2$ are regular expressions:</p>
+  <ul>
+    <li>$(R_1 \cup R_2)$ with $L = L(R_1) \cup L(R_2)$ — also written $R_1 + R_2$ or $R_1 \mid R_2$;</li>
+    <li>$(R_1 R_2)$ with $L = L(R_1)L(R_2)$;</li>
+    <li>$(R_1^*)$ with $L = L(R_1)^*$.</li>
+  </ul>
+</div>
+<p><strong>Precedence:</strong> star binds tightest, then concatenation, then union. So $ab^* \cup c$ means $\big(a(b^*)\big) \cup c$. Shorthands: $R^+ = RR^*$ (one or more), $R? = R \cup \varepsilon$ (optional), and $\Sigma$ for “any symbol”.</p>
+
+<h2>Reading and writing regexes</h2>
+<div class="table-wrap"><table>
+<tr><th>Expression (Σ = {0,1})</th><th>Language</th></tr>
+<tr><td>$0^*10^*$</td><td>exactly one 1</td></tr>
+<tr><td>$\Sigma^* 1 \Sigma^*$</td><td>at least one 1</td></tr>
+<tr><td>$\Sigma^* 001 \Sigma^*$</td><td>contains <code>001</code></td></tr>
+<tr><td>$(\Sigma\Sigma)^*$</td><td>even length</td></tr>
+<tr><td>$(\Sigma\Sigma\Sigma)^*$</td><td>length divisible by 3</td></tr>
+<tr><td>$\Sigma^*01$</td><td>ends in <code>01</code></td></tr>
+<tr><td>$0\Sigma^*0 \cup 1\Sigma^*1 \cup 0 \cup 1$</td><td>starts and ends with the same symbol</td></tr>
+<tr><td>$(1 \cup 01)^*$</td><td>every 0 is immediately followed by a 1</td></tr>
+<tr><td>$1^*(01^*01^*)^*$</td><td>even number of 0s</td></tr>
+<tr><td>$(0 \cup \varepsilon)(1 \cup 10)^*$</td><td>no two consecutive 0s</td></tr>
+<tr><td>$1^*\emptyset$</td><td>$\emptyset$ — concatenating with ∅ kills everything</td></tr>
+<tr><td>$\emptyset^*$</td><td>$\{\varepsilon\}$</td></tr>
+</table></div>
+
+<div class="regex-lab" data-regex="(1|01)*" data-tests=",1,01,0101,0011,10,11011,0"></div>
+
+<h2>Algebraic laws</h2>
+<p>Regular expressions form an algebra. Two expressions are <strong>equivalent</strong> if they denote the same language. Useful identities:</p>
+<div class="table-wrap"><table>
+<tr><th>Law</th><th>Identity</th></tr>
+<tr><td>Union is associative, commutative, idempotent</td><td>$R \cup S = S \cup R$, $R \cup R = R$</td></tr>
+<tr><td>Identities</td><td>$R \cup \emptyset = R$, $R\varepsilon = \varepsilon R = R$</td></tr>
+<tr><td>Annihilator</td><td>$R\emptyset = \emptyset R = \emptyset$</td></tr>
+<tr><td>Distributivity</td><td>$R(S \cup T) = RS \cup RT$, $(S \cup T)R = SR \cup TR$</td></tr>
+<tr><td>Star laws</td><td>$(R^*)^* = R^*$, $\emptyset^* = \varepsilon^* = \varepsilon$, $R^* = \varepsilon \cup RR^*$</td></tr>
+<tr><td>Sliding / shifting</td><td>$(RS)^*R = R(SR)^*$</td></tr>
+<tr><td>Denesting</td><td>$(R \cup S)^* = (R^*S)^*R^* = (R^* S^*)^*$</td></tr>
+</table></div>
+<div class="box pitfall">
+  <div class="box-title">Pitfall — concatenation does not commute, and star does not distribute</div>
+  <p>$RS \ne SR$ in general ($ab \ne ba$). And $(R \cup S)^* \ne R^* \cup S^*$: the left side contains $ab$, the right side does not. Also $(RS)^* \ne R^*S^*$: the right side contains $aab$, the left does not when $R=a,S=b$.</p>
+</div>
+
+<h2>Kleene’s theorem</h2>
+<div class="box theorem">
+  <div class="box-title">Theorem (Kleene, 1956)</div>
+  <p>A language is regular (recognized by some DFA / NFA) <strong>if and only if</strong> it is described by some regular expression.</p>
+</div>
+<p>We prove both directions constructively — each direction is an algorithm.</p>
+
+<h3>Direction 1: regex → NFA (Thompson’s construction)</h3>
+<p>Build an NFA by structural induction on the expression. Each piece has one start state and one accept state, and pieces are glued with ε-arrows:</p>
+<div class="table-wrap"><table>
+<tr><th>Expression</th><th>NFA</th></tr>
+<tr><td>$a$</td><td>$s \xrightarrow{a} f$</td></tr>
+<tr><td>$\varepsilon$</td><td>$s \xrightarrow{\varepsilon} f$ (or a single accepting start state)</td></tr>
+<tr><td>$\emptyset$</td><td>$s$, $f$ with no arrows</td></tr>
+<tr><td>$R_1 \cup R_2$</td><td>new start with ε-arrows into both machines; both accepts ε-arrow to a new accept</td></tr>
+<tr><td>$R_1 R_2$</td><td>ε-arrow from the accept of $N_1$ to the start of $N_2$</td></tr>
+<tr><td>$R^*$</td><td>new start $s$ (accepting via ε to new $f$); $s \xrightarrow{\varepsilon}$ start of $N$; accept of $N \xrightarrow{\varepsilon}$ start of $N$ (repeat) and $\xrightarrow{\varepsilon} f$ (stop)</td></tr>
+</table></div>
+<p>Here is Thompson’s NFA for $(a \cup b)^*$ followed by $a$ — every arrow follows the recipe:</p>
+<figure class="fa" data-fa='{"type":"nfa","w":640,"h":300,"r":19,"states":{"s":[50,140],"u":[150,140],"a1":[250,70],"a2":[360,70],"b1":[250,210],"b2":[360,210],"v":[460,140],"x":[540,140],"f":[620,140]},"start":"s","accept":["f"],"edges":[["s","u","ε"],["u","a1","ε"],["u","b1","ε"],["a1","a2","a"],["b1","b2","b"],["a2","v","ε"],["b2","v","ε"],["v","u","ε",0.75],["s","x","ε",0.5],["v","x","ε"],["x","f","a"]],"test":"bba"}'>
+  <figcaption><b>Thompson NFA for $(a\cup b)^*a$.</b> $u \dots v$ is the union; the loop $v \to u$ and the bypass $s \to x$ implement the star; $x \to f$ is the trailing $a$. It has many states but is built mechanically and has at most $2|R|$ states for an expression of size $|R|$.</figcaption>
+</figure>
+<p>Thompson’s construction gives an NFA linear in the size of the regex; simulating it with the set-of-states algorithm gives matching in $O(|R|\cdot|w|)$ time — guaranteed, with no exponential backtracking.</p>
+
+<h3>Direction 2: automaton → regex (state elimination)</h3>
+<p>Allow arrows to be labelled by <em>regular expressions</em> instead of single symbols — a <strong>generalized NFA</strong> (GNFA). Then remove states one at a time, patching the arrows so the language is preserved, until only a start and an accept state remain. The label on the last arrow is the answer.</p>
+<ol>
+  <li>Add a new start state with an ε-arrow to the old start, and a new accept state with ε-arrows from all old accept states. Merge parallel arrows with $\cup$.</li>
+  <li>Pick a state $q$ to remove. For every pair of states $p \to q \to r$, replace by a direct arrow $p \to r$ labelled
+    $$R_{pq}\,(R_{qq})^*\,R_{qr} \;\cup\; R_{pr}$$
+    where $R_{qq}$ is the self-loop at $q$ (use $\varepsilon$ if none) and $R_{pr}$ is any existing direct arrow.</li>
+  <li>Repeat until only start and accept remain.</li>
+</ol>
+<div class="box intuition">
+  <div class="box-title">Intuition — the formula is a path summary</div>
+  <p>Any path that used to go through $q$ looks like: enter $q$ ($R_{pq}$), loop at $q$ any number of times ($R_{qq}^*$), leave ($R_{qr}$). Or it never touched $q$ ($R_{pr}$). That is all the formula says.</p>
+</div>
+<div class="box example">
+  <div class="box-title">Worked example — even number of 0s</div>
+  <p>DFA: $E \xrightarrow{0} O$, $O \xrightarrow{0} E$, both loop on 1; $E$ is start and accept. Add new start $S \xrightarrow{\varepsilon} E$ and new accept $E \xrightarrow{\varepsilon} A$.</p>
+  <p><em>Eliminate $O$:</em> the only path through it is $E \xrightarrow{0} O \xrightarrow{0} E$ with loop $1$ at $O$, giving a new self-loop at $E$: $01^*0$. Combined with the existing loop $1$, $E$ now loops on $1 \cup 01^*0$.</p>
+  <p><em>Eliminate $E$:</em> $S \xrightarrow{\varepsilon} E \xrightarrow{\varepsilon} A$ with loop $1 \cup 01^*0$ gives</p>
+  <p>$$S \xrightarrow{\ (1 \cup 01^*0)^*\ } A.$$</p>
+  <p>So the language is $(1 \cup 01^*0)^*$ — read it as “a sequence of blocks, each either a single 1 or a pair of 0s with 1s in between.”</p>
+</div>
+<p>Different elimination orders give different (but equivalent) expressions, and the result can be exponentially long in the worst case — regexes are sometimes far less succinct than automata.</p>
+
+<h3>Arden’s lemma (the algebraic route)</h3>
+<p>Alternatively, write one equation per state: $X_q$ = the set of strings that lead from $q$ to acceptance. For example $X_E = 1X_E \cup 0X_O \cup \varepsilon$ and $X_O = 1X_O \cup 0X_E$. Solve with:</p>
+<div class="box theorem">
+  <div class="box-title">Arden’s lemma</div>
+  <p>If $\varepsilon \notin L(A)$, the equation $X = AX \cup B$ has the unique solution $X = A^*B$.</p>
+</div>
+<p>From the second equation $X_O = 1^*0X_E$; substitute: $X_E = (1 \cup 01^*0)X_E \cup \varepsilon$, so $X_E = (1 \cup 01^*0)^*$ — the same answer.</p>
+
+<h2>Theory regexes vs. programmers’ regexes</h2>
+<p>The <code>regex</code> in your programming language is a superset of the theory:</p>
+<ul>
+  <li><strong>Pure conveniences</strong> (still regular): character classes <code>[a-z]</code>, <code>\d</code>, <code>+</code>, <code>?</code>, <code>{2,5}</code>, anchors.</li>
+  <li><strong>Non-regular extensions</strong>: backreferences: <code>(a+)b\1</code> matches $\{a^n b a^n : n \ge 1\}$, which is not regular, and <code>(.*)\1</code> matches $\{ww\}$, which is not even context-free. Matching with backreferences is NP-hard.</li>
+  <li><strong>Engines</strong>: backtracking engines (Perl, Python <code>re</code>, Java, JavaScript) can take exponential time on patterns like <code>(a+)+$</code> against <code>aaaa…ab</code> — the infamous ReDoS attacks. Automaton-based engines (RE2, Go, Rust <code>regex</code>) use the NFA/DFA constructions from these chapters and run in linear time, at the price of not supporting backreferences.</li>
+</ul>
+
+<h2>Exercises</h2>
+<div class="exercises">
+<details class="ex"><summary>Write a regex over $\{0,1\}$ for strings that contain <strong>both</strong> <code>00</code> and <code>11</code>. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>$\Sigma^*00\Sigma^*11\Sigma^* \;\cup\; \Sigma^*11\Sigma^*00\Sigma^*$. Either occurrence can come first. (Note the occurrences cannot overlap since <code>00</code> and <code>11</code> share no symbol.)</p></div></details>
+
+<details class="ex"><summary>Describe $(0 \cup 1)^*0(0 \cup 1)(0 \cup 1)$ in words. <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>Strings of length at least 3 whose third symbol from the end is 0.</p></div></details>
+
+<details class="ex"><summary>Write a regex for binary strings with no two consecutive 1s. Test it in the regex lab. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>$(0 \cup 10)^*(\varepsilon \cup 1)$ — in the lab: <code>(0|10)*(ε|1)</code>. Every 1 except possibly the last must be followed by a 0.</p></div></details>
+
+<details class="ex"><summary>Prove or disprove: $(R^*S^*)^* = (R \cup S)^*$. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>True. ⊆: every string in $R^*S^*$ is a concatenation of pieces from $R$ and $S$, so belongs to $(R\cup S)^*$, and the latter is closed under concatenation. ⊇: any string in $(R \cup S)^*$ is a sequence of pieces each in $R$ or $S$; each piece alone is in $R^*S^*$ (with the other factor $\varepsilon$), so the sequence is in $(R^*S^*)^*$.</p></div></details>
+
+<details class="ex"><summary>Convert the DFA for “ends in 01” (states $q_0, q_1, q_2$ from Chapter 3) to a regex using state elimination. <span class="lvl hard">hard</span></summary>
+<div class="sol"><p>The expected answer is equivalent to $(0\cup1)^*01$. One route via Arden: let $X_i$ be the strings leading from $q_i$ to acceptance. $X_0 = 1X_0 \cup 0X_1$, $X_1 = 0X_1 \cup 1X_2$, $X_2 = 0X_1 \cup 1X_0 \cup \varepsilon$. Any correct elimination yields a regex denoting “strings ending in 01”; for exams, it is fine to then simplify to $\Sigma^*01$ and justify by the language description.</p></div></details>
+
+<details class="ex"><summary>How many states does Thompson’s construction produce for $a^*b$? Draw it. <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>$a$: 2 states; $a^*$: adds 2 → 4; $b$: 2 states; concatenation adds no states → 6 states in total. (Some presentations merge states and get fewer — the exact count depends on the variant, but it is always linear in the regex size.)</p></div></details>
+</div>
+
+<div class="box takeaways">
+  <div class="box-title">Takeaways</div>
+  <ul>
+    <li>Regexes: $\emptyset$, $\varepsilon$, symbols, closed under $\cup$, concatenation and $^*$. Precedence: star &gt; concat &gt; union.</li>
+    <li>Kleene: regex ≡ NFA ≡ DFA. Regex → NFA by Thompson (linear size); NFA → regex by state elimination or Arden’s lemma.</li>
+    <li>Elimination rule: $R_{pq}R_{qq}^*R_{qr} \cup R_{pr}$.</li>
+    <li>Practical regexes with backreferences are not regular; backtracking engines can be exponential, automaton engines are linear.</li>
+  </ul>
+</div>
+</article>
+</main>
+</body>
+</html>
