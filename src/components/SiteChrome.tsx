@@ -93,7 +93,14 @@ export function SiteChrome({ stars }: { stars: number | null }) {
   // on phones the dock stays put under the open menu so the button can close it in place
   const dockVisible = mobile ? dockShown : !atTop && !open;
 
-  const navClass = ['floatnav', 'glass', !atTop && dir === 'down' ? 'hide-d' : '', !atTop ? 'hide-m' : ''].join(' ');
+  // The nav and the dock never show together: away from the top the dock is up, so the nav stays hidden
+  // (even while scrolling up); at the top the dock is gone and the nav returns.
+  const navClass = ['floatnav', 'glass', !atTop ? 'hide-d hide-m' : ''].join(' ');
+
+  // Let layout react to the nav leaving (e.g. the sidebar grows upward into the freed space).
+  useEffect(() => {
+    document.documentElement.dataset.nav = atTop ? 'shown' : 'hidden';
+  }, [atTop]);
 
   const slug = pathname.startsWith('/learn/') ? pathname.split('/')[2] : null;
   const idx = slug ? chapterIndex(slug) : -1;

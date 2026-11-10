@@ -274,7 +274,8 @@ button { font: inherit; color: inherit; }
 
 /* ---------- Learn layout ---------- */
 .learn { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 40px; width: min(1240px, calc(100% - 32px)); margin: 0 auto; padding-top: 104px; }
-.sidebar { position: sticky; top: 98px; align-self: start; height: calc(100vh - 116px); overflow-y: auto; overscroll-behavior: contain; border-radius: 24px; padding: 16px 12px 24px; }
+.sidebar { position: sticky; top: 98px; align-self: start; height: calc(100vh - 116px); overflow-y: auto; overscroll-behavior: contain;
+  transition: top .45s cubic-bezier(.2,.8,.2,1), height .45s cubic-bezier(.2,.8,.2,1); border-radius: 24px; padding: 16px 12px 24px; }
 @media (max-width: 1020px) {
   .learn { grid-template-columns: minmax(0, 1fr); padding-top: 92px; }
   .learn .sidebar { display: none; }
@@ -829,3 +830,9 @@ body > .os-scrollbar-vertical.os-theme-wa { top: 84px; bottom: 12px; z-index: 65
   --os-size: 9px;
   --os-padding-perpendicular: 2px;
 }
+
+/* When the nav slides away, the sticky sidebar grows upward into the freed space (same easing as the nav),
+   so more of the chapter list is visible at the bottom. */
+html[data-nav="hidden"] .sidebar { top: 16px; height: calc(100vh - 32px); }
+html[data-nav="hidden"] body > .os-scrollbar-vertical.os-theme-wa { top: 16px; }
+@media (prefers-reduced-motion: reduce) { .sidebar { transition: none; } }
