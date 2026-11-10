@@ -720,3 +720,18 @@ button { font: inherit; color: inherit; }
   .t-btn { width: 38px; height: 38px; }
   .t-play { padding: 0 12px; }
 }
+
+
+/* ---------- Sliding Turing-machine tape ---------- */
+.tape-window {
+  position: relative; overflow: hidden; margin-top: 12px; padding: 8px 0 4px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.tape-strip { position: relative; left: 50%; display: flex; gap: 4px; width: max-content; transition: transform .38s cubic-bezier(.3,1,.4,1); will-change: transform; }
+.tape-strip .cell { width: 34px; min-width: 34px; padding: 0; transition: background-color .25s ease, border-color .25s ease, color .25s ease, box-shadow .25s ease; }
+.tape-head { position: absolute; left: 50%; top: 0; width: 0; height: 0; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--clay); }
+/* step changes should glide, not flash */
+.world { transition: border-color .25s ease, background-color .25s ease; }
+.cell { transition: background-color .25s ease, border-color .25s ease, color .25s ease, box-shadow .25s ease; }
+@media (prefers-reduced-motion: reduce) { .tape-strip { transition: none; } }

@@ -295,7 +295,8 @@ export function pdaPath(run: PDARun, end: PDAConfig): PDAConfig[] {
 
 export interface TMRule { to: string; write: string; move: 'L' | 'R' | 'S'; g: number }
 export type TMDelta = Record<string, Record<string, TMRule[]>>;
-export interface TMConfig { q: string; tape: string[]; head: number; g: number | null }
+/** off = cells prepended on the left so far, so (index - off) is a cell's absolute position */
+export interface TMConfig { q: string; tape: string[]; head: number; g: number | null; off: number }
 
 export function buildTM(spec: MachineSpec): TMDelta {
   const L = layout(spec);
@@ -325,7 +326,7 @@ export function isDeterministicTM(delta: TMDelta) {
 
 export function tmInitial(spec: MachineSpec, w: string): TMConfig {
   const tape = spec.kind === 'lba' ? [LEFT_END, ...w, RIGHT_END] : [...w];
-  return { q: spec.start!, tape, head: spec.kind === 'lba' ? 1 : 0, g: null };
+  return { q: spec.start!, tape, head: spec.kind === 'lba' ? 1 : 0, g: null, off: 0 };
 }
 
 export function tmSuccessors(spec: MachineSpec, delta: TMDelta, c: TMConfig): TMConfig[] {
@@ -333,13 +334,14 @@ export function tmSuccessors(spec: MachineSpec, delta: TMDelta, c: TMConfig): TM
   return (delta[c.q]?.[read] ?? []).map((r) => {
     let tape = c.tape.slice();
     let head = c.head;
-    if (head < 0) { tape = [BLANK, ...tape]; head = 0; }
+    let off = c.off;
+    if (head < 0) { tape = [BLANK, ...tape]; head = 0; off++; }
     tape[head] = r.write;
     head += r.move === 'R' ? 1 : r.move === 'L' ? -1 : 0;
     if (spec.kind === 'lba') head = Math.max(0, Math.min(tape.length - 1, head));
-    if (head < 0) { tape = [BLANK, ...tape]; head = 0; }
+    if (head < 0) { tape = [BLANK, ...tape]; head = 0; off++; }
     while (head >= tape.length) tape.push(BLANK);
-    return { q: r.to, tape, head, g: r.g };
+    return { q: r.to, tape, head, g: r.g, off };
   });
 }
 

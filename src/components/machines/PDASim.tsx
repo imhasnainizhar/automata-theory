@@ -97,8 +97,8 @@ export function PDASim({
     body = (
       <div className="worlds" aria-label="Live configurations">
         {frame.length === 0 && <div className="world">all branches died</div>}
-        {frame.slice(0, 24).map((c) => (
-          <div key={c.id} className={`world${acc.has(c.q) && c.i === w.length ? ' acc' : ''}`}>
+        {frame.slice(0, 24).map((c, i) => (
+          <div key={i} className={`world${acc.has(c.q) && c.i === w.length ? ' acc' : ''}`}>
             <b>{c.q}</b>
             <div className="mini-stack" title="stack, top first">
               {c.st ? [...c.st].map((s, i) => <span key={i}>{s}</span>) : <span style={{ background: 'none', color: 'var(--muted)' }}>ε</span>}

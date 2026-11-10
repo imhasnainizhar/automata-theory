@@ -95,14 +95,23 @@ export function TMSim({
 
   let tapeView: ReactNode;
   if (det) {
-    const from = lba ? 0 : Math.min(0, c0.head - 6);
-    const to = lba ? c0.tape.length - 1 : Math.max(c0.tape.length + 1, c0.head + 6);
+    // One fixed strip of cells at absolute positions; it slides under a still head (no re-layout, no jumps).
+    const pos = (c: TMConfig, i: number) => i - c.off;
+    const lo = lba ? 0 : Math.min(...sim.frames.map(([c]) => Math.min(pos(c, 0), pos(c, c.head)))) - 7;
+    const hi = lba ? c0.tape.length - 1 : Math.max(...sim.frames.map(([c]) => Math.max(pos(c, c.tape.length - 1), pos(c, c.head)))) + 7;
     const cells = [];
-    for (let i = from; i <= to; i++) {
-      const s = i < 0 ? BLANK : c0.tape[i] ?? BLANK;
-      cells.push(<span key={i} className={`cell${i === c0.head ? ' head' : cellClass(s)}`}>{s}</span>);
+    for (let a = lo; a <= hi; a++) {
+      const s = c0.tape[a + c0.off] ?? BLANK;
+      const isHead = a === pos(c0, c0.head);
+      cells.push(<span key={a} className={`cell${isHead ? ' head' : cellClass(s)}`}>{s}</span>);
     }
-    tapeView = <div className="tape center" aria-label="Tape">{cells}</div>;
+    const headIdx = pos(c0, c0.head) - lo;
+    tapeView = (
+      <div className="tape-window" aria-label="Tape">
+        <div className="tape-strip" style={{ transform: `translateX(${-(headIdx * 38 + 17)}px)` }}>{cells}</div>
+        <span className="tape-head" aria-hidden="true" />
+      </div>
+    );
   } else {
     tapeView = (
       <div className="worlds" aria-label="Branches">
