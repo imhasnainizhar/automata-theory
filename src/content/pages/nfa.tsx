@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import { ChapterShell } from '@/components/content/ChapterShell';
+import { KeyTerms, Primer } from '@/components/content/Primer';
 import { Note, Section, Table } from '@/components/content/Blocks';
 import { M, MB } from '@/components/content/Math';
 import { Exercise } from '@/components/content/Exercise';
@@ -15,6 +17,47 @@ export default function NFA() {
       lede="What if a machine could guess? A nondeterministic finite automaton may have several moves, or none, and accepts when any sequence of guesses works. It is easier to design and, surprisingly, no more powerful."
       chips={[{ text: 'Type 3 · Regular', tone: 'moss' }, { text: 'Nondeterministic', tone: 'clay' }, { text: '45 min' }]}
     >
+      <Primer
+        analogy={<>Searching a maze by sending a friend down every fork at once: if any friend reaches the exit, you have found a way.</>}
+      >
+        <p>An <strong>NFA</strong> is a finite machine that is allowed to <em>guess</em>. At a fork it may take several paths at once, and it may even jump between states without reading anything. It says yes if <strong>any</strong> path ends happily.</p>
+        <p>That sounds more powerful, but it is not: every NFA can be turned into an ordinary DFA. NFAs are popular because they are much <strong>easier to design</strong> and often much smaller. Regex engines and lexers build NFAs first.</p>
+      </Primer>
+      <KeyTerms
+        terms={[
+          {
+            term: 'NFA',
+            plain: 'Nondeterministic Finite Automaton: a finite machine that may guess.',
+            more: <><p>Same parts as a DFA (states, alphabet, start, accepting states), but the rulebook may give <em>several</em> next states, or none.</p></>,
+          },
+          {
+            term: 'Nondeterminism',
+            plain: 'Exploring all choices at once; accept if any succeeds.',
+            more: <><p>Not randomness, and not luck. Picture parallel worlds, or a finger on every state the machine could be in. The machine accepts if at least one world accepts.</p></>,
+          },
+          {
+            term: <><M t="\varepsilon" />-move</>,
+            plain: 'A free jump that reads no input.',
+            more: <><p>An arrow labelled <M t="\varepsilon" /> can be taken at any time without consuming a symbol. It is handy for gluing machines together (union, concatenation, star).</p></>,
+          },
+          {
+            term: <><M t="\varepsilon" />-closure</>,
+            plain: 'All states reachable using only free moves.',
+            more: <><p>Whenever an NFA is in a state, it is effectively also in every state reachable by ε-arrows from it. Simulations always take this closure.</p></>,
+          },
+          {
+            term: <><M t="\mathcal{P}(Q)" />, power set</>,
+            plain: 'The set of all subsets of the states.',
+            more: <><p>An NFA’s rulebook returns a subset of states, so its type mentions <M t="\mathcal{P}(Q)" />. If there are <M t="n" /> states, there are <M t="2^n" /> subsets. That is where the worst-case blow-up of the subset construction comes from.</p></>,
+          },
+          {
+            term: 'Subset construction',
+            plain: 'Turning an NFA into an equivalent DFA.',
+            more: <><p>Each DFA state is a <em>set</em> of NFA states: “where could the NFA be now?”. Compute it step by step from the start; only reachable sets are ever created.</p></>,
+          },
+        ]}
+      />
+
       <Section id="intuition" n={1} title="Intuition" sub="What problem does this machine solve?">
         <p>
           Some patterns are awkward to check deterministically but trivial if you are allowed to <strong>guess</strong>. Take: <em>“the third symbol from the end is a 1”</em>. A DFA must remember the last three symbols at all times (8 combinations). An NFA simply waits, guesses <em>“this 1 is the one”</em>, and then checks that exactly two more symbols follow.
@@ -91,7 +134,7 @@ accept iff current contains an accepting state`}</code></pre>
         <Note kind="pitfall" title="the blow-up is real">
           <p>For “the <M t="n" />-th symbol from the end is 1”, the NFA has <M t="n + 1" /> states, but every DFA needs at least <M t="2^n" />. Any two different strings of length <M t="n" /> must lead to different DFA states. Nondeterminism adds no power, but it can be exponentially more <em>succinct</em>.</p>
         </Note>
-        <p>NFAs are also the bridge to regular expressions. <strong>Thompson’s construction</strong> turns any regex into an NFA with at most twice as many states as the regex has symbols, gluing pieces together with ε-arrows. Fast regex engines (RE2, Rust’s <code>regex</code>, Go) simulate these NFAs with the set-of-states method, which guarantees linear time.</p>
+        <p>NFAs are also the bridge to regular expressions. <strong>Thompson’s construction</strong> turns any regex into an NFA with at most twice as many states as the regex has symbols, gluing pieces together with ε-arrows. Fast regex engines (RE2, Rust’s <code>regex</code>, Go) simulate these NFAs with the set-of-states method, which guarantees linear time. The next chapter, <Link href="/learn/regex">Regular Expressions &amp; Kleene’s Theorem</Link>, builds that NFA step by step and also goes the other way, from a machine back to a regex.</p>
       </Section>
 
       <Section id="grammar-connection" n={6} title="Grammar connection" sub="How is that language generated?">

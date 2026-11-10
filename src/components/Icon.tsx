@@ -9,6 +9,7 @@ const paths = {
     </>
   ),
   sigma: <path d="M17 5H7l6 7-6 7h10" />,
+  asterisk: <path d="M12 4v16M5.1 8l13.8 8M18.9 8 5.1 16" />,
   sprout: (
     <>
       <path d="M12 21v-9" />

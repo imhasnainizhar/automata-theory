@@ -175,3 +175,62 @@ export const ntmGuess: MachineSpec = {
     ['q0', 'q2', '0→R'], ['q2', 'q_acc', '␣→L'],
   ],
 };
+
+/* ------------------------------------------- Kleene / Thompson / elimination */
+
+/** Thompson building blocks (diagrams only). */
+export const tSymbol: MachineSpec = {
+  kind: 'static', w: 320, h: 120, start: 's', accept: ['f'],
+  states: { s: [70, 60], f: [240, 60] },
+  edges: [['s', 'f', 'a']],
+};
+export const tUnion: MachineSpec = {
+  kind: 'static', w: 470, h: 250, start: 's', accept: ['f'],
+  states: { s: [60, 125], a1: [170, 55], a2: [300, 55], b1: [170, 195], b2: [300, 195], f: [410, 125] },
+  edges: [['s', 'a1', 'ε'], ['s', 'b1', 'ε'], ['a1', 'a2', 'a'], ['b1', 'b2', 'b'], ['a2', 'f', 'ε'], ['b2', 'f', 'ε']],
+};
+export const tConcat: MachineSpec = {
+  kind: 'static', w: 480, h: 130, start: 'p0', accept: ['p3'],
+  states: { p0: [60, 70], p1: [175, 70], p2: [290, 70], p3: [410, 70] },
+  edges: [['p0', 'p1', 'a'], ['p1', 'p2', 'ε'], ['p2', 'p3', 'b']],
+};
+export const tStar: MachineSpec = {
+  kind: 'static', w: 480, h: 240, start: 's', accept: ['f'],
+  states: { s: [60, 115], n0: [180, 115], n1: [305, 115], f: [420, 115] },
+  edges: [['s', 'n0', 'ε'], ['n0', 'n1', 'a'], ['n1', 'f', 'ε'], ['n1', 'n0', 'ε', 0.55], ['s', 'f', 'ε', 0.45]],
+};
+
+/** Thompson's construction for (a ∪ b)*a, one stage at a time. */
+const TP = { a1: [250, 70], a2: [360, 70], b1: [250, 210], b2: [360, 210], u: [150, 140], v: [460, 140], s: [50, 140], x: [545, 140], c: [620, 140], f: [700, 140] } as const;
+const pick = (...ks: (keyof typeof TP)[]) => Object.fromEntries(ks.map((k) => [k, [...TP[k]] as [number, number]]));
+export const thompsonStages: MachineSpec[] = [
+  { kind: 'static', w: 740, h: 300, r: 19, states: pick('a1', 'a2', 'b1', 'b2'), accept: ['a2', 'b2'], edges: [['a1', 'a2', 'a'], ['b1', 'b2', 'b']] },
+  {
+    kind: 'static', w: 740, h: 300, r: 19, start: 'u', accept: ['v'], states: pick('u', 'a1', 'a2', 'b1', 'b2', 'v'),
+    edges: [['u', 'a1', 'ε'], ['u', 'b1', 'ε'], ['a1', 'a2', 'a'], ['b1', 'b2', 'b'], ['a2', 'v', 'ε'], ['b2', 'v', 'ε']],
+  },
+  {
+    kind: 'static', w: 740, h: 300, r: 19, start: 's', accept: ['x'], states: pick('s', 'u', 'a1', 'a2', 'b1', 'b2', 'v', 'x'),
+    edges: [['s', 'u', 'ε'], ['u', 'a1', 'ε'], ['u', 'b1', 'ε'], ['a1', 'a2', 'a'], ['b1', 'b2', 'b'], ['a2', 'v', 'ε'], ['b2', 'v', 'ε'],
+      ['v', 'u', 'ε', 0.75], ['s', 'x', 'ε', 0.5], ['v', 'x', 'ε']],
+  },
+];
+export const thompsonFinal: MachineSpec = {
+  kind: 'nfa', w: 740, h: 300, r: 19, start: 's', accept: ['f'], states: pick('s', 'u', 'a1', 'a2', 'b1', 'b2', 'v', 'x', 'c', 'f'),
+  edges: [['s', 'u', 'ε'], ['u', 'a1', 'ε'], ['u', 'b1', 'ε'], ['a1', 'a2', 'a'], ['b1', 'b2', 'b'], ['a2', 'v', 'ε'], ['b2', 'v', 'ε'],
+    ['v', 'u', 'ε', 0.75], ['s', 'x', 'ε', 0.5], ['v', 'x', 'ε'], ['x', 'c', 'ε'], ['c', 'f', 'a']],
+};
+thompsonStages.push({ ...thompsonFinal, kind: 'static' });
+
+/** State elimination on the "even number of 0s" DFA, ending in (1 ∪ 01*0)*. */
+const EP = { S: [60, 200], E: [250, 200], A: [450, 200], O: [250, 70] } as const;
+const pe = (...ks: (keyof typeof EP)[]) => Object.fromEntries(ks.map((k) => [k, [...EP[k]] as [number, number]]));
+export const eliminationStages: MachineSpec[] = [
+  { kind: 'static', w: 520, h: 290, start: 'E', accept: ['E'], states: pe('E', 'O'), edges: [['E', 'O', '0'], ['O', 'E', '0'], ['E', 'E', '1', null, 'down'], ['O', 'O', '1', null, 'right']] },
+  {
+    kind: 'static', w: 520, h: 290, start: 'S', accept: ['A'], states: pe('S', 'E', 'A', 'O'),
+    edges: [['S', 'E', 'ε'], ['E', 'A', 'ε'], ['E', 'O', '0'], ['O', 'E', '0'], ['E', 'E', '1', null, 'down'], ['O', 'O', '1', null, 'right']],
+  },
+  { kind: 'static', w: 520, h: 290, start: 'S', accept: ['A'], states: pe('S', 'E', 'A'), edges: [['S', 'E', 'ε'], ['E', 'A', 'ε'], ['E', 'E', '1 ∪ 01*0', null, 'down']] },
+  { kind: 'static', w: 520, h: 290, start: 'S', accept: ['A'], states: pe('S', 'A'), edges: [['S', 'A', '(1 ∪ 01*0)*']] },
+];

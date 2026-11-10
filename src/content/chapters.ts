@@ -89,6 +89,23 @@ export const CHAPTERS: Chapter[] = [
     sections: MACHINE_SECTIONS,
   },
   {
+    slug: 'regex',
+    title: 'Regular Expressions & Kleene’s Theorem',
+    short: 'Kleene',
+    group: 'Finite Automata',
+    icon: 'asterisk',
+    blurb: 'DFA vs NFA, converting between them, and why regular expressions describe exactly the same languages: Thompson’s construction and state elimination.',
+    sections: [
+      { id: 'dfa-vs-nfa', title: 'DFA vs. NFA, side by side' },
+      { id: 'conversions', title: 'Converting between machines' },
+      { id: 'regular-expressions', title: 'Regular expressions' },
+      { id: 'kleene', title: 'Kleene’s theorem' },
+      { id: 'thompson', title: 'Thompson’s construction' },
+      { id: 'state-elimination', title: 'State elimination' },
+      { id: 'exercises', title: 'Exercises' },
+    ],
+  },
+  {
     slug: 'dpda',
     title: 'Deterministic Pushdown Automata',
     short: 'DPDA',
