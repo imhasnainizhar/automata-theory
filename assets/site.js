@@ -147,7 +147,10 @@
     }
     const foot = document.createElement('footer');
     foot.className = 'site-foot';
-    foot.innerHTML = 'Automata A→Z · an open guide to the theory of computation · <a href="https://github.com/imhasnainizhar/automata-theory">source &amp; issues</a>';
+    foot.innerHTML = 'Automata A→Z · an open-source guide to the theory of computation · ' +
+      '<a href="https://github.com/imhasnainizhar/automata-theory">source</a> · ' +
+      '<a href="https://github.com/imhasnainizhar/automata-theory/issues/new/choose">report an error</a> · ' +
+      'content <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>, code MIT';
     main.appendChild(foot);
 
     // home: chapter cards
