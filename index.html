@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Automata A to Z</title>
+<meta name="description" content="A complete, intuition-first guide to automata theory, formal languages, computability and complexity — with interactive simulators.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234b45d6'/%3E%3Ccircle cx='10' cy='16' r='4.6' fill='none' stroke='white' stroke-width='2'/%3E%3Ccircle cx='23' cy='16' r='4.6' fill='none' stroke='white' stroke-width='2'/%3E%3Cpath d='M14.8 16h3.2' stroke='white' stroke-width='2'/%3E%3C/svg%3E">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script defer src="assets/automata.js"></script>
+<script defer src="assets/site.js"></script>
+</head>
+<body data-page="index">
+<main id="content">
+<article class="prose">
+
+<section class="hero">
+  <div class="kicker">Theory of Computation · from zero to fluent</div>
+  <h1>Automata, A to Z</h1>
+  <p class="lede">A complete, intuition-first course on automata theory, formal languages, computability and complexity. Every idea comes with the <em>why</em> before the <em>what</em>, a precise definition, worked examples, machines you can run in your browser, and exercises with solutions.</p>
+  <div class="cta">
+    <a class="btn primary" href="01-big-picture.html">Start with Chapter 1 →</a>
+    <a class="btn" href="17-review.html">Jump to the cheat sheet</a>
+  </div>
+</section>
+
+<h2>What you will be able to do</h2>
+<ul>
+  <li><strong>Design</strong> finite automata, regular expressions, grammars, pushdown automata and Turing machines for a given language — and know which model is the right one.</li>
+  <li><strong>Convert</strong> between models: NFA → DFA, regex ↔ automaton, CFG ↔ PDA, any grammar → Chomsky Normal Form, and minimize a DFA.</li>
+  <li><strong>Prove limits</strong>: show a language is not regular (pumping, Myhill–Nerode, closure) or not context-free, and show a problem is undecidable (diagonalization, reductions, Rice's theorem).</li>
+  <li><strong>Reason about efficiency</strong>: P, NP, NP-completeness, polynomial-time reductions, and the space classes.</li>
+  <li><strong>Recognise the theory in practice</strong>: lexers, regex engines, parsers, protocol state machines, static analysis and verification.</li>
+</ul>
+
+<div class="box intuition">
+  <div class="box-title">The one-sentence story of this whole subject</div>
+  <p>Give a machine <em>more memory</em> and it can recognise <em>more patterns</em> — finite memory gives regular languages, a stack gives context-free languages, an unbounded tape gives everything computable — and yet even the most powerful machine has problems it can <em>never</em> solve, and many it can solve but not <em>quickly</em>.</p>
+</div>
+
+<h2>How each chapter works</h2>
+<div class="table-wrap"><table>
+  <tr><th>Block</th><th>What it is for</th></tr>
+  <tr><td><span class="pill" style="background:var(--idea-soft);color:var(--idea)">Intuition</span></td><td>The mental picture. Read these first; they are what you will remember in five years.</td></tr>
+  <tr><td><span class="pill" style="background:var(--def-soft);color:var(--def)">Definition</span></td><td>The precise statement. Learn to read the notation — it is a compact language, not decoration.</td></tr>
+  <tr><td><span class="pill" style="background:var(--accent-soft);color:var(--accent)">Theorem</span></td><td>A guaranteed fact, usually with a proof or proof sketch that shows <em>why</em> it is true.</td></tr>
+  <tr><td><span class="pill" style="background:var(--warn-soft);color:var(--warn)">Pitfall</span></td><td>The mistakes students make most often in exams and interviews.</td></tr>
+  <tr><td><span class="pill" style="background:var(--surface-2);color:var(--ink-2)">Interactive</span></td><td>State diagrams you can run: type an input, press <b>Step</b> or <b>Run</b>, watch the active states light up.</td></tr>
+  <tr><td><span class="pill" style="background:var(--good-soft);color:var(--good)">Takeaways</span></td><td>The minimum you should be able to say from memory before moving on.</td></tr>
+</table></div>
+
+<p>Try one right now. This machine accepts binary numbers that are divisible by 3. Type a binary number and press <b>Run</b>:</p>
+
+<figure class="fa" data-fa='{"type":"dfa","w":520,"h":190,"states":{"r0":[110,105],"r1":[260,105],"r2":[410,105]},"start":"r0","accept":["r0"],"edges":[["r0","r0","0",null,"up"],["r0","r1","1"],["r1","r0","1"],["r1","r2","0"],["r2","r1","0"],["r2","r2","1",null,"up"]],"test":"1001"}'>
+  <figcaption><b>A three-state “divisible by 3” machine.</b> State $r_k$ means “the bits read so far form a number with remainder $k$ mod 3”. Reading bit $b$ turns remainder $r$ into $(2r+b) \bmod 3$ — that is all it needs to remember. You will build this yourself in Chapter 3.</figcaption>
+</figure>
+
+<h2>The course map</h2>
+<div id="chapter-cards"></div>
+
+<h2>Suggested paths</h2>
+<ul>
+  <li><strong>Taking a university course?</strong> Read in order. Chapters 3–10 are typically the first half of the term, 11–15 the second.</li>
+  <li><strong>Preparing for an exam in a hurry?</strong> Read every <em>Intuition</em> and <em>Takeaways</em> box, then do the exercises in Chapter 17 and return to whatever you get wrong.</li>
+  <li><strong>A working programmer who wants the CS foundations?</strong> Chapters 1, 3, 4, 5, 8, 11, 12, 15 and 16 give the highest return per hour.</li>
+</ul>
+
+<h2>Prerequisites</h2>
+<p>Very few. You should be comfortable with basic programming and with reading simple mathematical notation. Everything else — sets, functions, proof by induction, proof by contradiction, countability — is taught from scratch in <a href="02-math-toolkit.html">Chapter 2</a>.</p>
+
+<div class="box takeaways">
+  <div class="box-title">Your progress is saved</div>
+  <p>At the end of each chapter you can mark it as understood. Progress is stored only in this browser and shows up in the sidebar and on the cards above.</p>
+</div>
+
+</article>
+</main>
+</body>
+</html>
