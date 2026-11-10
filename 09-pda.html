@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pushdown Automata · Automata A to Z</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script defer src="assets/automata.js"></script>
+<script defer src="assets/site.js"></script>
+</head>
+<body data-page="09-pda">
+<main id="content">
+<article class="prose">
+<div class="kicker">Chapter 9 · Context-Free Languages</div>
+<h1>Pushdown Automata</h1>
+<p class="lede">Give a finite automaton a stack — unbounded memory, but accessible only at the top — and it can match nested structure. Pushdown automata are to context-free grammars what finite automata are to regular expressions: the machine side of the same coin.</p>
+<div class="chapter-meta"><span class="chip">⏱ 70 min</span><span class="chip">Prerequisite: Chapters 4, 8</span><span class="chip">Nondeterministic simulator</span></div>
+
+<h2>The intuition</h2>
+<div class="box intuition">
+  <div class="box-title">Intuition — a stack of plates</div>
+  <p>To check $0^n1^n$, push a plate for every <code>0</code>; pop a plate for every <code>1</code>. If you run out of plates too early, or have plates left at the end, reject. The stack is unbounded, so it can count arbitrarily high — but you can only see the top plate, so you cannot, for example, compare two separate counts.</p>
+  <p>A stack is <em>exactly</em> the memory needed for nesting: the most recently opened bracket is the first one that must be closed. That is why the stack is the natural memory for recursion — and why your CPU uses a call stack.</p>
+</div>
+
+<h2>Definition</h2>
+<div class="box definition">
+  <div class="box-title">Definition — pushdown automaton (PDA)</div>
+  <p>A PDA is a 6-tuple $P = (Q, \Sigma, \Gamma, \delta, q_0, F)$ where $Q$, $\Sigma$, $q_0$, $F$ are as for an NFA, $\Gamma$ is the finite <strong>stack alphabet</strong>, and</p>
+  <p>$$\delta : Q \times \Sigma_\varepsilon \times \Gamma_\varepsilon \to \mathcal{P}(Q \times \Gamma^*).$$</p>
+  <p>A transition $(r, \gamma) \in \delta(q, a, X)$, drawn as an arrow $q \to r$ labelled $a, X \to \gamma$, means: <em>in state $q$, reading $a$ (or nothing, if $a = \varepsilon$), with $X$ on top of the stack (or ignoring the stack if $X = \varepsilon$), pop $X$, push $\gamma$, and go to $r$.</em></p>
+  <p>$P$ accepts $w$ if <strong>some</strong> sequence of moves reads all of $w$ and ends in a state of $F$.</p>
+</div>
+<p>The PDA is <strong>nondeterministic</strong> by default — and unlike for finite automata, this matters: deterministic PDAs are strictly weaker (see below).</p>
+<p>We often push a special <strong>bottom marker</strong> $\bot$ first, so that the machine can detect an empty stack. A <strong>configuration</strong> (instantaneous description) is a triple $(q, \text{remaining input}, \text{stack contents})$, and $\vdash$ denotes one move.</p>
+
+<h2>Example 1 — $0^n1^n$</h2>
+<figure class="fa" data-fa='{"type":"pda","w":620,"h":200,"states":{"q1":[70,120],"q2":[220,120],"q3":[390,120],"q4":[550,120]},"start":"q1","accept":["q1","q4"],"edges":[["q1","q2","ε,ε→⊥"],["q2","q2","0,ε→0",null,"up"],["q2","q3","1,0→ε"],["q3","q3","1,0→ε",null,"up"],["q3","q4","ε,⊥→ε"]],"test":"000111"}'>
+  <figcaption><b>PDA for $\{0^n1^n\}$.</b> Push ⊥; push a 0 for each 0; pop a 0 for each 1; accept when ⊥ is exposed exactly as the input ends. $q_1$ accepts the empty string. Press <b>Find accepting run</b> and watch the stack; then try a mismatch such as <code>00111</code>.</figcaption>
+</figure>
+<div class="table-wrap"><table>
+<tr><th>Step</th><th>Configuration (state, input left, stack — top first)</th><th>Transition used</th></tr>
+<tr><td>0</td><td>$(q_1,\ 0011,\ \varepsilon)$</td><td>—</td></tr>
+<tr><td>1</td><td>$(q_2,\ 0011,\ \bot)$</td><td>$\varepsilon, \varepsilon \to \bot$</td></tr>
+<tr><td>2</td><td>$(q_2,\ 011,\ 0\bot)$</td><td>$0, \varepsilon \to 0$</td></tr>
+<tr><td>3</td><td>$(q_2,\ 11,\ 00\bot)$</td><td>$0, \varepsilon \to 0$</td></tr>
+<tr><td>4</td><td>$(q_3,\ 1,\ 0\bot)$</td><td>$1, 0 \to \varepsilon$</td></tr>
+<tr><td>5</td><td>$(q_3,\ \varepsilon,\ \bot)$</td><td>$1, 0 \to \varepsilon$</td></tr>
+<tr><td>6</td><td>$(q_4,\ \varepsilon,\ \varepsilon)$ — accept</td><td>$\varepsilon, \bot \to \varepsilon$</td></tr>
+</table></div>
+
+<h2>Example 2 — even palindromes: nondeterminism at work</h2>
+<p>$L = \{ww^R : w \in \{0,1\}^*\}$. The machine pushes the first half, then pops while matching the second half. But where is the middle? It cannot know — so it <strong>guesses</strong>, with an ε-move from the “push” phase to the “pop” phase. Only the branch that guesses correctly survives to accept.</p>
+<figure class="fa" data-fa='{"type":"pda","w":620,"h":220,"states":{"q1":[70,140],"q2":[220,140],"q3":[390,140],"q4":[550,140]},"start":"q1","accept":["q4"],"edges":[["q1","q2","ε,ε→⊥"],["q2","q2","0,ε→0;1,ε→1",null,"up"],["q2","q3","ε,ε→ε"],["q3","q3","0,0→ε;1,1→ε",null,"up"],["q3","q4","ε,⊥→ε"]],"test":"011110"}'>
+  <figcaption><b>Guess the middle.</b> The ε-arrow $q_2 \to q_3$ is the guess. The simulator explores all branches breadth-first and shows the one that accepts. Try <code>011110</code>, <code>0110</code>, and <code>0101</code> (rejected — every guess fails).</figcaption>
+</figure>
+
+<h2>Acceptance by final state vs. empty stack</h2>
+<p>Some books define acceptance differently: $P$ accepts by <strong>empty stack</strong> if some run reads all of the input and empties the stack (in any state). The two notions are equivalent for nondeterministic PDAs:</p>
+<ul>
+  <li><em>Final state → empty stack:</em> from every accept state, add ε-moves to a new “drain” state that pops everything. (Push a fresh bottom marker first so the original machine never empties its stack by accident.)</li>
+  <li><em>Empty stack → final state:</em> push a fresh bottom marker $\bot'$ first; whenever $\bot'$ is exposed, the original stack is empty — move to a new accept state.</li>
+</ul>
+
+<h2>The equivalence theorem</h2>
+<div class="box theorem">
+  <div class="box-title">Theorem — PDAs and CFGs are equivalent</div>
+  <p>A language is context-free if and only if some pushdown automaton recognizes it.</p>
+</div>
+
+<h3>CFG → PDA: simulate leftmost derivations</h3>
+<div class="box intuition">
+  <div class="box-title">Intuition — the stack holds “what I still expect to see”</div>
+  <p>Start with $S$ on the stack. Repeatedly look at the top: if it is a <strong>variable</strong> $A$, nondeterministically replace it by the right side of some rule $A \to w$ (guessing the derivation). If it is a <strong>terminal</strong> $a$, it must match the next input symbol — pop it and read it. Accept when the stack is empty and the input is used up. This is exactly a top-down (LL) parser, minus the lookahead that makes real parsers deterministic.</p>
+</div>
+<p>A three-state construction: $q_\text{start} \xrightarrow{\varepsilon,\varepsilon\to S\bot} q_\text{loop}$; at $q_\text{loop}$ add a self-loop $\varepsilon, A \to w$ for every rule $A \to w$ and $a, a \to \varepsilon$ for every terminal; finally $q_\text{loop} \xrightarrow{\varepsilon,\bot\to\varepsilon} q_\text{acc}$. For $S \to 0S1 \mid \varepsilon$:</p>
+<figure class="fa" data-fa='{"type":"pda","w":600,"h":240,"states":{"start":[90,170],"loop":[300,170],"acc":[510,170]},"start":"start","accept":["acc"],"edges":[["start","loop","ε,ε→S⊥"],["loop","loop","ε,S→0S1;ε,S→ε;0,0→ε;1,1→ε",null,"up"],["loop","acc","ε,⊥→ε"]],"test":"0011"}'>
+  <figcaption><b>The grammar as a machine.</b> Rule-expansion moves (ε, S→…) guess the derivation; matching moves (0,0→ε) check it against the input. The accepting run is a leftmost derivation of the input.</figcaption>
+</figure>
+
+<h3>PDA → CFG (sketch)</h3>
+<p>First normalize the PDA: a single accept state, the stack is empty when accepting, and every move either pushes one symbol or pops one symbol. Then create a variable $A_{pq}$ for every pair of states, generating exactly the strings that take the PDA from $p$ with an empty stack to $q$ with an empty stack. Consider the first push and the matching last pop of such a computation:</p>
+<ul>
+  <li>if the symbol pushed first is popped only at the very end: $A_{pq} \to a\,A_{rs}\,b$ (where $a$ is read on the push $p \to r$, $b$ on the pop $s \to q$);</li>
+  <li>otherwise the stack becomes empty somewhere in the middle at state $r$: $A_{pq} \to A_{pr}A_{rq}$;</li>
+  <li>and $A_{pp} \to \varepsilon$.</li>
+</ul>
+<p>The start variable is $A_{q_0 q_\text{acc}}$. Proving both directions is a careful induction on derivation length / computation length.</p>
+
+<h2>Deterministic PDAs</h2>
+<div class="box definition">
+  <div class="box-title">Definition — DPDA</div>
+  <p>A PDA is <strong>deterministic</strong> if in every configuration at most one move is possible (including ε-moves). Languages recognized by DPDAs (by final state) are the <strong>deterministic context-free languages</strong> (DCFLs).</p>
+</div>
+<ul>
+  <li>DCFLs ⊊ CFLs. For example $\{ww^R\}$ is context-free but not deterministic: a DPDA cannot know where the middle is. By contrast, $\{w\,c\,w^R\}$ (with an explicit centre marker $c$) is a DCFL.</li>
+  <li>DCFLs are closed under complement (unlike CFLs) and are never inherently ambiguous.</li>
+  <li>DCFLs are exactly the languages of <strong>LR(k)</strong> grammars — the class used by parser generators like yacc and bison. Programming-language designers deliberately keep syntax deterministic so it can be parsed in linear time.</li>
+</ul>
+<div class="box pitfall">
+  <div class="box-title">Pitfall — for PDAs, nondeterminism adds power</div>
+  <p>For finite automata, NFA = DFA. For Turing machines, NTM = DTM (in power). For pushdown automata, <strong>NPDA ≠ DPDA</strong>. You cannot “subset-construct” a PDA, because different branches have different stacks and the set of possible stacks is unbounded.</p>
+</div>
+
+<h2>Exercises</h2>
+<div class="exercises">
+<details class="ex"><summary>Design a PDA for $\{a^ib^j : i \ge j\}$. <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>Push ⊥; push an $a$ per $a$; on each $b$ pop an $a$ (move to a “b-phase” state on the first $b$). Accept at the end in the b-phase or a-phase regardless of what remains on the stack (leftover $a$’s are fine). Make the start and the a-phase accepting too, so $\varepsilon$ and $a^i$ are accepted.</p></div></details>
+
+<details class="ex"><summary>Design a PDA for strings over $\{a,b\}$ with equally many $a$’s and $b$’s. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>Use the stack as a signed counter. After ⊥: on $a$, if the top is $b$ pop it, else push $a$; on $b$, if the top is $a$ pop it, else push $b$. Accept (via $\varepsilon, \bot \to \varepsilon$ to the accept state) when ⊥ is on top at the end. The stack always contains only $a$’s or only $b$’s, recording the surplus.</p></div></details>
+
+<details class="ex"><summary>Trace the palindrome PDA on <code>0110</code>, listing the configurations of the accepting branch. <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>$(q_1, 0110, \varepsilon) \vdash (q_2, 0110, \bot) \vdash (q_2, 110, 0\bot) \vdash (q_2, 10, 10\bot) \vdash (q_3, 10, 10\bot) \vdash (q_3, 0, 0\bot) \vdash (q_3, \varepsilon, \bot) \vdash (q_4, \varepsilon, \varepsilon)$. The guess happened after reading <code>01</code>.</p></div></details>
+
+<details class="ex"><summary>Build the CFG→PDA machine for the balanced-parentheses grammar $S \to (S)S \mid \varepsilon$ and run the simulator in your head on <code>()</code>. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>Loop transitions: $\varepsilon, S \to (S)S$; $\varepsilon, S \to \varepsilon$; $(, ( \to \varepsilon$; $), ) \to \varepsilon$. Run: stack $S\bot$ → expand to $(S)S\bot$ → read <code>(</code>: $S)S\bot$ → $S \to \varepsilon$: $)S\bot$ → read <code>)</code>: $S\bot$ → $S \to \varepsilon$: $\bot$ → pop ⊥, accept.</p></div></details>
+
+<details class="ex"><summary>Explain intuitively why $\{a^nb^nc^n\}$ seems impossible for a PDA. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>After pushing $n$ symbols for the $a$’s, checking the $b$’s requires popping them — and then the count is gone when the $c$’s arrive. If instead it keeps the count, it cannot verify the $b$’s. One stack can verify one matching, not two. The next chapter turns this intuition into a proof with the CFL pumping lemma.</p></div></details>
+</div>
+
+<div class="box takeaways">
+  <div class="box-title">Takeaways</div>
+  <ul>
+    <li>PDA = NFA + stack. Transitions $a, X \to \gamma$: read $a$, pop $X$, push $\gamma$.</li>
+    <li>A stack matches nesting: last opened, first closed.</li>
+    <li>CFG ⇔ PDA. CFG → PDA simulates leftmost derivations with the stack holding the unmatched suffix; PDA → CFG uses variables $A_{pq}$.</li>
+    <li>Final-state and empty-stack acceptance are equivalent for NPDAs.</li>
+    <li>DPDAs are strictly weaker; DCFLs = LR(k) languages, the basis of practical parsers.</li>
+  </ul>
+</div>
+</article>
+</main>
+</body>
+</html>
