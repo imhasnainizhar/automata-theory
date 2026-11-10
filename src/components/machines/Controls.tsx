@@ -103,13 +103,10 @@ export function InputBar({
   );
 }
 
-/** Playback bar: rewind, step back, play/pause, step forward, speed. Fits one row on a phone. */
+/** Playback bar: step back, play/pause/replay, step forward, speed, step counter. Fits one row on a phone. */
 export function Transport({ s, stepWord = 'step' }: { s: Stepper; stepWord?: string }) {
   return (
     <div className="transport" role="group" aria-label="Playback">
-      <button type="button" className="t-btn" onClick={s.rewind} disabled={s.atStart && !s.playing} aria-label="Rewind to start" title="Rewind">
-        <Icon name="skipBack" />
-      </button>
       <button type="button" className="t-btn" onClick={s.back} disabled={s.atStart} aria-label={`Previous ${stepWord}`} title={`Previous ${stepWord}`}>
         <Icon name="stepBack" />
       </button>
