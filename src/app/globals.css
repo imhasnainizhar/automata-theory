@@ -203,13 +203,29 @@ button { font: inherit; color: inherit; }
     -webkit-tap-highlight-color: transparent;
   }
   .menu-fab svg { width: 24px; height: 24px; transition: transform .25s cubic-bezier(.3,1.5,.5,1); }
+  /* hover / press: the same raised cream pill the dock uses (background only, since transform positions the button) */
+  .menu-fab::before {
+    content: ""; position: absolute; inset: 2px; border-radius: 999px; z-index: -1;
+    background: #fffdf8; border: 1px solid rgba(221,210,191,.9);
+    box-shadow: 0 6px 16px -8px rgba(60,45,25,.5), 0 1px 0 rgba(255,255,255,.9) inset;
+    opacity: 0; transform: scale(.7); transition: opacity .2s ease, transform .3s cubic-bezier(.3,1.4,.5,1);
+  }
+  .menu-fab { isolation: isolate; }
+  /* At the top the button draws its own pill; in the dock the dock's sliding pill moves under it instead. */
+  @media (hover: hover) {
+    .menu-fab:not(.docked):hover::before { opacity: 1; transform: none; }
+    .menu-fab:not(.docked):hover svg { transform: rotate(-8deg) scale(1.06); }
+    .menu-fab.docked:hover svg { transform: translateY(-2px) scale(1.06); }
+  }
+  .menu-fab:not(.docked):active::before { opacity: 1; transform: scale(.92); }
   .menu-fab:active svg { transform: scale(.85); }
+  .menu-fab:focus-visible { outline: none; }
+  .menu-fab:not(.docked):focus-visible::before { opacity: 1; transform: none; box-shadow: 0 0 0 2px var(--clay); }
   /* Travel straight down into the dock's reserved slot, growing from normal size as it goes.
      Slot centre: 100dvh - 14px (dock bottom) - 32px (half dock); start centre: 18px + 24px. */
   /* --fw is the merged dock width (set from JS). Slot centre x = 50vw + fw/2 - 32px; button centre x = 100vw - 46px.
      Slot centre y = 100dvh - 44px; button centre y = 42px. */
   .menu-fab.docked { transform: translate(calc(-50vw + var(--fw) / 2 + 14px), calc(100dvh - 86px)) scale(1.08); }
-  .menu-fab.docked:hover svg { transform: scale(1.08); }
   /* leaves the screen together with the dock (same offset and timing as .dock) */
   .menu-fab.gone-down {
     transform: translate(calc(-50vw + var(--fw) / 2 + 14px), calc(100dvh - 86px + 60px + 40px)) scale(1.08); opacity: 0;
@@ -220,15 +236,17 @@ button { font: inherit; color: inherit; }
     transform: translateY(-90px); opacity: 0;
     transition: transform .45s cubic-bezier(.2,.8,.2,1), opacity .3s ease;
   }
-  .menu-fab.open { transform: none; opacity: 1; }
+  /* when the menu is open the button stays where it is and becomes the close button */
 
   /* Smaller and centred. Compact while the menu button is elsewhere;
      widens on the right to make room as the button arrives (.merged). */
   .dock { bottom: 14px; height: 60px; padding: 6px; gap: 2px; transform: translate(-50%, calc(100% + 40px)); }
   .dock.shown { transform: translate(-50%, 0); }
-  .dock.merged { padding-right: 60px; } /* 6px pad + 2px gap + 52px slot */
+  /* the slot the menu button lands in: grows from 0 to 52px when the button merges in */
+  .dock-slot { flex: none; display: block; width: 0; height: 48px; transition: width .45s cubic-bezier(.3,1.2,.5,1); }
+  .dock.merged .dock-slot { width: 52px; }
   .dock-pill { top: 6px; }
-  .dock-item { width: 58px; }
+  .dock-item { width: var(--dock-item, 68px); }
 }
 
 /* ---------- Menu sheet ---------- */
@@ -237,11 +255,20 @@ button { font: inherit; color: inherit; }
 .sheet {
   position: fixed; z-index: 73; left: 12px; right: 12px; top: 12px; bottom: 12px; border-radius: 28px;
   padding: 22px 18px 96px; overflow-y: auto;
-  transform: translateY(16px) scale(.97); opacity: 0; pointer-events: none;
-  transition: transform .4s cubic-bezier(.2,.8,.2,1), opacity .3s ease;
-  background: rgba(251, 248, 242, 0.86);
+  background: rgba(251, 248, 242, 0.92);
+  /* masking animation: a circle grows out of the menu button (--ox, --oy) and shrinks back into it */
+  clip-path: circle(0px at var(--ox, calc(100% - 34px)) var(--oy, 34px));
+  visibility: hidden; pointer-events: none;
+  transition: clip-path .62s cubic-bezier(.7,0,.25,1), visibility 0s linear .62s;
 }
-.sheet.open { transform: none; opacity: 1; pointer-events: auto; }
+.sheet.open {
+  clip-path: circle(150vmax at var(--ox, calc(100% - 34px)) var(--oy, 34px));
+  visibility: visible; pointer-events: auto;
+  transition: clip-path .62s cubic-bezier(.7,0,.25,1), visibility 0s;
+}
+.sheet > * { opacity: 0; transform: translateY(10px); transition: opacity .2s ease, transform .3s ease; }
+.sheet.open > * { opacity: 1; transform: none; transition: opacity .35s ease .22s, transform .45s cubic-bezier(.2,.8,.2,1) .22s; }
+@media (prefers-reduced-motion: reduce) { .sheet, .sheet > * { transition: none !important; } }
 .sheet h2 { font: 600 24px/1.1 var(--font-display); margin: 4px 6px 16px; }
 .sheet .sheet-actions { display: flex; gap: 10px; margin: 18px 4px 0; flex-wrap: wrap; }
 
@@ -256,6 +283,26 @@ button { font: inherit; color: inherit; }
 /* chapter nav (shared by sidebar + sheet) */
 .chap-group { margin: 14px 10px 6px; font: 700 11px/1 var(--font-sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .chap-list { list-style: none; margin: 0; padding: 0; }
+.chap-row { display: flex; align-items: center; gap: 2px; }
+.chap-row .chap-link { flex: 1; min-width: 0; }
+.chap-toggle {
+  flex: none; width: 32px; height: 32px; border-radius: 999px; border: 0; background: none; cursor: pointer;
+  display: grid; place-items: center; color: var(--muted); transition: background-color .2s ease, color .2s ease;
+}
+.chap-toggle:hover { background: rgba(255,255,255,.7); color: var(--ink); }
+.chap-toggle svg { width: 16px; height: 16px; transition: transform .35s cubic-bezier(.3,1.3,.5,1); }
+.chap-item.open > .chap-row .chap-toggle svg { transform: rotate(90deg); }
+
+/* Animated expand/collapse: grid rows 0fr → 1fr animates to the content's natural height */
+.expand { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .42s cubic-bezier(.2,.8,.2,1); }
+.expand[data-open="true"] { grid-template-rows: 1fr; }
+.expand-inner { min-height: 0; overflow: hidden; }
+.expand .sub-list li { opacity: 0; transform: translateY(-6px); transition: opacity .2s ease, transform .3s cubic-bezier(.2,.8,.2,1); }
+.expand[data-open="true"] .sub-list li { opacity: 1; transform: none; transition-delay: calc(var(--i, 0) * 28ms + 60ms); }
+.expand .ex-body { opacity: 0; transform: translateY(-6px); transition: opacity .25s ease, transform .35s cubic-bezier(.2,.8,.2,1); }
+.expand[data-open="true"] .ex-body { opacity: 1; transform: none; transition-delay: .08s; }
+@media (prefers-reduced-motion: reduce) { .expand, .expand * { transition: none !important; } }
+
 .chap-link {
   display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 14px;
   color: var(--ink-2); text-decoration: none; font-weight: 500; font-size: 15px; line-height: 1.3;
@@ -565,4 +612,42 @@ button { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
   html { scroll-behavior: auto; }
+}
+
+/* ---------- Loading screen ---------- */
+.splash {
+  position: fixed; inset: 0; z-index: 200; display: grid; place-content: center; justify-items: center; gap: 14px;
+  background:
+    radial-gradient(700px 400px at 70% 20%, rgba(200,146,58,.18), transparent 60%),
+    radial-gradient(600px 400px at 20% 80%, rgba(86,112,63,.16), transparent 60%),
+    var(--bg);
+  clip-path: circle(150vmax at 50% 50%);
+  transition: clip-path .7s cubic-bezier(.7,0,.25,1);
+}
+.splash.leaving { clip-path: circle(0px at 50% 50%); }
+.splash-seen .splash { display: none; }
+.splash-machine { width: min(260px, 70vw); height: auto; overflow: visible; }
+.splash-machine * { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.sp-start, .sp-start-head { stroke: var(--muted); stroke-dasharray: 40; stroke-dashoffset: 40; animation: sp-draw .35s ease forwards; }
+.sp-s1 { stroke-dasharray: 140; stroke-dashoffset: 140; animation: sp-draw .5s ease .2s forwards, sp-glow 1.6s ease 1.1s infinite; }
+.sp-edge, .sp-edge-head { stroke: var(--clay); stroke-dasharray: 80; stroke-dashoffset: 80; animation: sp-draw .45s ease .6s forwards; }
+.sp-s2, .sp-s2-inner { stroke-dasharray: 140; stroke-dashoffset: 140; animation: sp-draw .5s ease .85s forwards; }
+.sp-token { fill: var(--ochre); stroke: none; opacity: 0; animation: sp-travel 1.4s cubic-bezier(.6,0,.3,1) 1s infinite; }
+@keyframes sp-draw { to { stroke-dashoffset: 0; } }
+@keyframes sp-travel {
+  0% { opacity: 0; transform: translateX(0); }
+  15% { opacity: 1; }
+  70% { opacity: 1; transform: translateX(100px); }
+  100% { opacity: 0; transform: translateX(100px); }
+}
+@keyframes sp-glow { 0%, 100% { fill: transparent; } 50% { fill: var(--moss-soft); } }
+.sp-s2-inner { animation: sp-draw .5s ease .85s forwards, sp-accept 1.4s ease 1s infinite; }
+@keyframes sp-accept { 0%, 60% { fill: transparent; } 75%, 90% { fill: var(--moss); } 100% { fill: transparent; } }
+.splash-name { font: 600 30px/1 var(--font-display); letter-spacing: -0.02em; color: var(--ink); opacity: 0; animation: sp-fade .5s ease .3s forwards; }
+.splash-name em { font-style: italic; font-weight: 500; color: var(--clay); }
+.splash-note { font: 500 13px var(--font-sans); color: var(--muted); letter-spacing: .02em; opacity: 0; animation: sp-fade .5s ease .6s forwards; }
+@keyframes sp-fade { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .splash * { animation-duration: .01ms !important; animation-delay: 0s !important; }
+  .splash { transition: none; }
 }

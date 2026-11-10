@@ -25,6 +25,8 @@ export function SiteChrome({ stars }: { stars: number | null }) {
   const [atTop, setAtTop] = useState(true);
   const [dir, setDir] = useState<'up' | 'down'>('down');
   const [open, setOpen] = useState(false);
+  const [fabHover, setFabHover] = useState(false);
+  const [origin, setOrigin] = useState<{ x: number; y: number } | null>(null);
   const last = useRef(0);
 
   useEffect(() => {
@@ -88,7 +90,8 @@ export function SiteChrome({ stars }: { stars: number | null }) {
     mq.addEventListener('change', sync);
     return () => mq.removeEventListener('change', sync);
   }, []);
-  const dockVisible = !open && (mobile ? dockShown : !atTop);
+  // on phones the dock stays put under the open menu so the button can close it in place
+  const dockVisible = mobile ? dockShown : !atTop && !open;
 
   const navClass = ['floatnav', 'glass', !atTop && dir === 'down' ? 'hide-d' : '', !atTop ? 'hide-m' : ''].join(' ');
 
@@ -142,15 +145,37 @@ export function SiteChrome({ stars }: { stars: number | null }) {
         tabIndex={fab === 'gone-up' || fab === 'gone-down' ? -1 : undefined}
         aria-label={open ? 'Close menu' : 'Open menu'}
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        onClick={(e) => {
+          // the mask grows out of (and shrinks back into) the button's current position
+          const r = e.currentTarget.getBoundingClientRect();
+          setOrigin({ x: r.left + r.width / 2 - 12, y: r.top + r.height / 2 - 12 });
+          setOpen((o) => !o);
+        }}
+        onMouseEnter={() => setFabHover(true)}
+        onMouseLeave={() => setFabHover(false)}
+        onFocus={() => setFabHover(true)}
+        onBlur={() => setFabHover(false)}
       >
         <Icon name={open ? 'close' : 'menu'} />
       </button>
 
-      <Dock items={dockItems} className={`dock glass${dockVisible ? ' shown' : ''}${mobile && merged ? ' merged' : ''}`} inert={!dockVisible} />
+      <Dock
+        items={dockItems}
+        className={`dock glass${dockVisible ? ' shown' : ''}${mobile && merged ? ' merged' : ''}`}
+        inert={!dockVisible}
+        slot={mobile}
+        slotHover={mobile && fab === 'docked' && fabHover}
+      />
 
       <div className={`sheet-scrim${open ? ' open' : ''}`} onClick={() => setOpen(false)} />
-      <div className={`sheet glass${open ? ' open' : ''}`} role="dialog" aria-modal="true" aria-label="Menu" aria-hidden={!open}>
+      <div
+        className={`sheet${open ? ' open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu"
+        inert={!open}
+        style={origin ? { ['--ox' as string]: `${origin.x}px`, ['--oy' as string]: `${origin.y}px` } : undefined}
+      >
         <h2>Explore</h2>
         <ChapterNav onNavigate={() => setOpen(false)} />
         <div className="sheet-actions">
