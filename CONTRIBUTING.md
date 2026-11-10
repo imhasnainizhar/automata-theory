@@ -1,87 +1,75 @@
-# Contributing to Automata, A to Z
+# Contributing to WhatAutomata
 
-Thanks for helping make this course better! Contributions of every size are welcome — a typo fix is as valuable as a new chapter.
+Thanks for helping make this course better! Contributions of every size are welcome. A typo fix is as valuable as a new chapter.
 
 ## Ways to contribute
 
-- **Report an error.** Found a wrong proof, a buggy diagram, or a confusing explanation? [Open an issue](https://github.com/imhasnainizhar/automata-theory/issues/new/choose) and point to the chapter and section.
-- **Improve an explanation.** Better intuition, a clearer example, or a missing pitfall.
-- **Add exercises.** Every chapter benefits from more problems with worked solutions.
-- **Add an interactive machine.** Diagrams are just JSON in the HTML — see below.
-- **Translate.** Open an issue first so we can agree on a folder structure.
+- **Report an error.** Wrong proof, buggy machine, confusing explanation? [Open an issue](https://github.com/imhasnainizhar/automata-theory/issues/new/choose) and name the chapter and section.
+- **Improve an explanation.** Better intuition, a clearer example, a missing pitfall.
+- **Add exercises.** More problems with worked solutions, more builder tasks, more prediction quizzes.
+- **Add an interactive machine.** Machines are plain data. See below.
 
-## Running the site locally
-
-No build step and no dependencies:
+## Running locally
 
 ```bash
 git clone https://github.com/imhasnainizhar/automata-theory.git
 cd automata-theory
-python -m http.server 8000
-# open http://localhost:8000
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Before opening a pull request, run the checker (Python 3, standard library only):
+Before opening a pull request:
 
 ```bash
-python scripts/check_site.py
+npm run check      # TypeScript + brute-force check of every machine in src/content/specs.ts
+npm run build
 ```
 
-It verifies that every internal link points to an existing page or heading, that every
-diagram's JSON spec parses and references only declared states, and that there are no
-stray `$` signs outside math. CI runs the same script on every push and pull request.
+`scripts/check-specs.mts` runs each machine on every short string and compares the result with a plain-JavaScript description of the language it is supposed to recognise. When you add a machine, add a line there too.
 
-## Project layout
+## Where things live
 
-```
-index.html                 home page and course map
-NN-slug.html               one file per chapter (01 … 17)
-assets/style.css           design tokens (light + dark) and components
-assets/site.js             sidebar, chapter list, progress, theme, KaTeX
-assets/automata.js         diagram renderer + DFA/NFA/PDA/TM simulators, widgets
-scripts/check_site.py      consistency checks used by CI
-```
-
-To add a chapter: copy an existing chapter file, change `data-page` on `<body>`, and add an entry to the `CHAPTERS` array at the top of `assets/site.js`.
+| Path | What |
+|---|---|
+| `src/content/chapters.ts` | chapter order, groups, sidebar icons and section outline |
+| `src/content/pages/*.tsx` | chapter content, one file per chapter |
+| `src/content/specs.ts` | every machine used in the course |
+| `src/lib/machines.ts` | diagram layout and the DFA/NFA/PDA/TM/LBA engines (pure TypeScript) |
+| `src/components/machines/` | `StateDiagram`, `FASim`, `PDASim`, `TMSim` |
+| `src/components/widgets/` | CPU, lexer, parser, grammar playground, builders, quizzes |
+| `src/app/globals.css` | the whole design system |
 
 ## Writing style
 
-- **Intuition before formalism.** Each new idea should open with an `Intuition` box.
-- Use the callout classes: `box intuition`, `box definition`, `box theorem`, `box pitfall`, `box example`, `box takeaways`, and `div.proof` (add `sketch` for proof sketches).
-- Exercises use `<details class="ex">` with a difficulty tag: `<span class="lvl easy|med|hard">`.
+- **Intuition before formalism.** Open each idea with a `<Note kind="intuition">`.
+- Machine chapters keep the eight-part template: Intuition, Visual machine, Execution, Formal definition, Corresponding language, Grammar connection, Limitations, Exercises.
+- After every formal definition, add a plain-English reading.
+- Math uses KaTeX: `<M t="\delta : Q \to Q" />` (inline) and `<MB t="..." />` (display). JSX attribute strings keep backslashes as they are.
 - Notation follows Sipser’s *Introduction to the Theory of Computation* where possible.
-- Math is KaTeX with `$…$` (inline) and `$$…$$` (display). **Never use a bare `$` in prose** — write “dollars” instead. Inside math write `\lt` instead of `<`.
 
-## Diagram specs
+## Machine specs
 
-```html
-<figure class="fa" data-fa='{"type":"dfa","w":520,"h":190,
-  "states":{"q0":[110,105],"q1":[300,105]},
-  "start":"q0","accept":["q1"],
-  "edges":[["q0","q1","1"],["q1","q0","0"],["q0","q0","0",null,"up"]],
-  "test":"101"}'>
-  <figcaption>…</figcaption>
-</figure>
+```ts
+export const evenZeros: MachineSpec = {
+  kind: 'dfa',                       // dfa | nfa | pda | tm | lba | static
+  w: 520, h: 200,                    // SVG viewBox
+  start: 'Even', accept: ['Even'],
+  states: { Even: [150, 112], Odd: [370, 112] },
+  edges: [
+    ['Even', 'Odd', '0'], ['Odd', 'Even', '0'],
+    ['Even', 'Even', '1', null, 'up'],   // [from, to, label, bend?, loopDirection?]
+    ['Odd', 'Odd', '1', null, 'up'],
+  ],
+};
 ```
 
-| Field | Meaning |
-|---|---|
-| `type` | `dfa`, `nfa`, `pda`, `tm`, or `static` (no simulator) |
-| `states` | name → `[x, y]` in the viewBox; `q0` renders as q₀, `q_acc` as q<sub>acc</sub> |
-| `edges` | `[from, to, label, bend?, loopDir?]`; `bend` curves the edge, `loopDir` is `up`/`down`/`left`/`right` for self-loops |
-| labels | FA: `0,1` (`ε` allowed) · PDA: `a,X→Y` · TM: `a→b,R` or `a,b→R`; separate multiple rules with `;` |
-| `accept`, `reject`, `dead` | lists of state names |
-| `test` | default input for the simulator |
-
-Parse trees: `<figure class="tree" data-tree="S[a S[ε] b]">`.
+Labels: FA `0,1` (ε allowed) · PDA `a,X→Y` (read, pop → push) · TM/LBA `a→b,R` or `a,b→R`. Separate several rules on one arrow with `;`. State names like `q0` render as q₀ and `q_acc` as q<sub>acc</sub>.
 
 ## Pull requests
 
-1. Fork and create a branch (`fix/nfa-typo`, `content/pumping-examples`, …).
+1. Fork and branch (`fix/nfa-typo`, `content/more-pda-exercises`, …).
 2. Keep each PR focused on one change.
-3. Run `python scripts/check_site.py` and preview the pages you touched in light **and** dark mode, and at phone width.
-4. Describe *what* you changed and *why* in the PR.
+3. Run `npm run check` and `npm run build`, and preview your pages on desktop and at phone width.
+4. Explain *what* changed and *why*.
 
-By contributing you agree that your contributions are licensed under the project’s licenses: MIT for code and CC BY 4.0 for course content.
-
-Please follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+By contributing you agree that your contributions are licensed under the project’s licenses: MIT for code and CC BY 4.0 for course content. Please follow the [Code of Conduct](CODE_OF_CONDUCT.md).

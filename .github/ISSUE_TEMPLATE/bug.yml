@@ -6,7 +6,7 @@ body:
     id: page
     attributes:
       label: Page
-      placeholder: "https://imhasnainizhar.github.io/automata-theory/09-pda.html"
+      placeholder: "/learn/npda (or the full URL)"
     validations:
       required: true
   - type: textarea

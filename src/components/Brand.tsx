@@ -1,0 +1,27 @@
+import Link from 'next/link';
+
+export function BrandMark({ className = 'brand-mark' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 40 40" aria-hidden="true">
+      <path d="M20 2.5c9.5 0 17.5 6.6 17.5 17.2 0 10-8 17.8-17.8 17.8C9.6 37.5 2.5 30 2.5 20.4 2.5 10 10.4 2.5 20 2.5Z" fill="#56703f" />
+      <circle cx="13.5" cy="22" r="5.2" fill="none" stroke="#fbf8f2" strokeWidth="2" />
+      <circle cx="27.5" cy="22" r="5.2" fill="none" stroke="#fbf8f2" strokeWidth="2" />
+      <circle cx="27.5" cy="22" r="2.6" fill="#c8923a" />
+      <path d="M18.7 22h3.4" stroke="#fbf8f2" strokeWidth="2" strokeLinecap="round" />
+      <path d="M20.6 19.9 22.7 22l-2.1 2.1" fill="none" stroke="#fbf8f2" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10.4 17.2c.4-4.6 5.8-6.4 7.6-2.6" fill="none" stroke="#f4dfd2" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="m18.9 12.6-.6 2.5-2.4-.8" fill="none" stroke="#f4dfd2" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function Brand() {
+  return (
+    <Link href="/" className="brand" aria-label="WhatAutomata home">
+      <BrandMark />
+      <span className="brand-name">
+        What<em>Automata</em>
+      </span>
+    </Link>
+  );
+}

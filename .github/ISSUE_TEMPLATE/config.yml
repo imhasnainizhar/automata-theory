@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
   - name: Read the course
-    url: https://imhasnainizhar.github.io/automata-theory/
-    about: The live site — check the latest version before reporting.
+    url: https://github.com/imhasnainizhar/automata-theory
+    about: Source and README for WhatAutomata.

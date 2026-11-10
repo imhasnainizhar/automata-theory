@@ -1,0 +1,137 @@
+import { ChapterShell } from '@/components/content/ChapterShell';
+import { Note, Section, Table } from '@/components/content/Blocks';
+import { M, MB } from '@/components/content/Math';
+import { Exercise } from '@/components/content/Exercise';
+import { TMSim } from '@/components/machines/TMSim';
+import { StringQuiz } from '@/components/widgets/StringQuiz';
+import { DerivationPlayground } from '@/components/widgets/DerivationPlayground';
+import { lbaAnBnCn } from '@/content/specs';
+
+export default function LBA() {
+  return (
+    <ChapterShell
+      slug="lba"
+      lede="Take a Turing machine and fence it in: it may read and rewrite its input as often as it likes, but never step beyond it. This bounded machine checks several counts at once and recognises the context-sensitive languages."
+      chips={[{ text: 'Type 1 · Context-sensitive', tone: 'teal' }, { text: 'Deterministic & nondeterministic', tone: 'clay' }, { text: '40 min' }]}
+    >
+      <Section id="intuition" n={1} title="Intuition" sub="What problem does this machine solve?">
+        <p>
+          A pushdown automaton fails on <M t="a^nb^nc^n" /> because its stack forgets the a’s once they are matched against the b’s. What if, instead of a stack, the machine could <strong>walk back and forth over the input and mark it up</strong>, crossing off one a, one b and one c per pass?
+        </p>
+        <Note kind="intuition" title="a worksheet you can scribble on">
+          <p>You get the input written on a strip of paper, with fences at both ends. You may move left and right, read and overwrite any cell, as often as you like, but you never get more paper. Memory is <strong>linear in the input length</strong>.</p>
+        </Note>
+        <p>That is enough to compare any number of counts, check that a string is a copy of itself (<M t="ww" />), or verify that a length is a perfect square: everything that fits in the space of the input.</p>
+      </Section>
+
+      <Section id="visual-machine" n={2} title="Visual machine" sub="Interactive states, transitions and inputs.">
+        <TMSim
+          spec={lbaAnBnCn}
+          initial="aabbcc"
+          presets={['', 'abc', 'aabbcc', 'aabbc', 'abcabc', 'aaabbbccc']}
+          speed={180}
+          tag="Interactive"
+          title="An LBA for aⁿbⁿcⁿ"
+          caption={<>Each pass crosses off one <code>a</code> (as X), one <code>b</code> (as Y) and one <code>c</code> (as Z), then walks back. The dark cells ⊢ and ⊣ are the end markers, which the head can never move past. A label <code className="inline-code">a→X,R</code> means: read a, write X, move right.</>}
+        />
+        <div className="explain">
+          <div className="explain-item"><b><span className="dot" style={{ background: 'var(--ink)' }} />End markers ⊢ ⊣</b>They fence the tape. The machine can read them but never cross or overwrite them.</div>
+          <div className="explain-item"><b><span className="dot" style={{ background: 'var(--clay)' }} />Head</b>Moves one cell left or right per step, reading and writing.</div>
+          <div className="explain-item"><b><span className="dot" style={{ background: 'var(--ochre)' }} />Extra symbols</b>X, Y and Z are marks. The tape alphabet may be larger than the input alphabet, which is why the memory is linear rather than exactly <M t="n" /> bits.</div>
+        </div>
+      </Section>
+
+      <Section id="execution" n={3} title="Execution" sub="Trace how input moves through the machine.">
+        <p>A configuration is the tape contents with the state written just before the head’s cell: <M t="\vdash X\,a\,[q_1]\,b\,b\,c\,c \dashv" /> means the machine is in <M t="q_1" /> reading the first b. On <code>abc</code>:</p>
+        <Table>
+          <thead><tr><th>Step</th><th>Configuration</th><th>What happened</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td><code>⊢[q0]abc⊣</code></td><td>start on the first input cell</td></tr>
+            <tr><td>1</td><td><code>⊢X[q1]bc⊣</code></td><td>cross off a</td></tr>
+            <tr><td>2</td><td><code>⊢XY[q2]c⊣</code></td><td>cross off b</td></tr>
+            <tr><td>3</td><td><code>⊢X[q3]YZ⊣</code></td><td>cross off c, turn back</td></tr>
+            <tr><td>4–5</td><td><code>⊢X[q0]YZ⊣</code></td><td>walk back past Y to X, then step right</td></tr>
+            <tr><td>6–7</td><td><code>⊢XYZ[q4]⊣</code></td><td>only Y and Z remain: check to the end</td></tr>
+            <tr><td>8</td><td><code>q_acc</code> ✓</td><td>reached ⊣: every symbol was matched</td></tr>
+          </tbody>
+        </Table>
+        <StringQuiz spec={lbaAnBnCn} strings={['abc', 'aabbcc', 'abcc', 'aabcbc', 'aaabbbccc', 'cba']} title="aⁿbⁿcⁿ?" />
+        <p>
+          <strong>Why an LBA always gives an answer.</strong> On an input of length <M t="n" />, an LBA with <M t="q" /> states and <M t="g" /> tape symbols has at most <M t="q \cdot n \cdot g^n" /> different configurations. If it runs longer than that, it has repeated a configuration and is in a loop, so a simulator can stop and reject. This is why every context-sensitive language is <em>decidable</em>.
+        </p>
+      </Section>
+
+      <Section id="formal-definition" n={4} title="Formal definition" sub="Mathematical representation and English definition.">
+        <Note kind="definition" title="linear bounded automaton">
+          <MB t="M = (Q,\ \Sigma,\ \Gamma,\ \delta,\ q_0,\ \vdash,\ \dashv,\ F)" />
+          <p>A Turing machine (next chapter) whose input is written as <M t="\vdash w \dashv" />, with <M t="\vdash, \dashv \in \Gamma" />. The transition function <M t="\delta : Q \times \Gamma \to \mathcal{P}(Q \times \Gamma \times \{L, R\})" /> must never overwrite the markers, never move left from <M t="\vdash" /> and never move right from <M t="\dashv" />.</p>
+        </Note>
+        <p>
+          <strong>In plain English:</strong> a machine with a finite control and a read/write head on a tape that holds exactly the input between two fences. Each step reads the cell under the head, writes a symbol, moves one cell, and changes state. By default an LBA is <strong>nondeterministic</strong>. A <strong>deterministic</strong> LBA (DLBA) allows at most one move in each situation.
+        </p>
+        <Note kind="theorem" title="the LBA problems">
+          <p><em>First LBA problem</em> (open since 1964): are deterministic LBAs as powerful as nondeterministic ones? Nobody knows.</p>
+          <p><em>Second LBA problem</em> (solved in 1987 by Immerman and Szelepcsényi): context-sensitive languages <strong>are</strong> closed under complement.</p>
+        </Note>
+      </Section>
+
+      <Section id="corresponding-language" n={5} title="Corresponding language" sub="What language can it recognise?">
+        <Note kind="theorem" title="Kuroda, 1964">
+          <p>A language is <strong>context-sensitive</strong> if and only if some (nondeterministic) LBA recognises it.</p>
+        </Note>
+        <Table>
+          <thead><tr><th>Context-sensitive, not context-free</th><th>How the LBA checks it</th></tr></thead>
+          <tbody>
+            <tr><td><M t="\{a^nb^nc^n\}" /></td><td>cross off one of each per pass</td></tr>
+            <tr><td><M t="\{ww\}" /></td><td>find the middle by marking from both ends, then compare cell by cell</td></tr>
+            <tr><td><M t="\{a^{n^2}\}" />, <M t="\{a^{2^n}\}" /></td><td>repeatedly halve or count, using marks on the tape</td></tr>
+            <tr><td><M t="\{a^p : p \text{ prime}\}" /></td><td>try every divisor, keeping counters on the tape</td></tr>
+          </tbody>
+        </Table>
+        <p>CSLs are closed under union, intersection, complement, concatenation and star, and their membership problem is decidable (though it can take exponential time; it is PSPACE-complete in general).</p>
+      </Section>
+
+      <Section id="grammar-connection" n={6} title="Grammar connection" sub="How is that language generated?">
+        <p>
+          <strong>Context-sensitive grammars</strong> allow rules whose left side has several symbols, as long as rules never <em>shrink</em> the string: <M t="\alpha \to \beta" /> with <M t="|\alpha| \le |\beta|" />. Equivalently, <M t="\gamma A \delta \to \gamma \beta \delta" />: “<M t="A" /> may become <M t="\beta" /> only in the context <M t="\gamma \_ \delta" />”. For <M t="a^nb^nc^n" />:
+        </p>
+        <MB t="S \to aSBC \mid aBC \qquad CB \to BC \qquad aB \to ab \qquad bB \to bb \qquad bC \to bc \qquad cC \to cc" />
+        <DerivationPlayground
+          rules={['S -> aSBC | aBC', 'CB -> BC', 'aB -> ab', 'bB -> bb', 'bC -> bc', 'cC -> cc']}
+          goal="aabbcc"
+          title="Derive aabbcc with a context-sensitive grammar"
+          caption="Strategy: generate aaBCBC, use CB → BC to sort the variables into aaBBCC, then turn them into terminals from left to right. Each conversion needs its left neighbour as context."
+        />
+        <p>
+          Why does “never shrink” match “bounded tape”? In a derivation of <M t="w" />, every intermediate string has length at most <M t="|w|" />, so the whole derivation fits on a tape the size of the input. An LBA can guess the derivation backwards, from <M t="w" /> to <M t="S" />, in that space.
+        </p>
+      </Section>
+
+      <Section id="limitations" n={7} title="Limitations" sub="What can this machine NOT recognise?">
+        <ul>
+          <li><strong>Problems that need more than linear space.</strong> By the space hierarchy theorem, some decidable languages need more memory than any LBA has. CSL ⊊ decidable.</li>
+          <li><strong>Emptiness is undecidable.</strong> Given an LBA, “does it accept anything?” cannot be decided: an LBA can check whether its input is a valid accepting computation history of an arbitrary Turing machine.</li>
+          <li><strong>Equivalence and universality</strong> are undecidable too, while membership stays decidable.</li>
+        </ul>
+        <Note kind="intuition" title="the price of power, again">
+          <p>Finite automata: everything decidable. Pushdown: membership and emptiness decidable, equivalence not. LBA: membership decidable, emptiness not. Each step up the ladder buys expressiveness and pays for it in what you can know about the machine.</p>
+        </Note>
+      </Section>
+
+      <Section id="exercises" n={8} title="Exercises" sub="Build machines and test strings.">
+        <Exercise n={1} level="easy" q={<>How many configurations can an LBA with 5 states and 4 tape symbols have on an input of length 10?</>}>
+          <p>At most <M t="q \cdot n \cdot g^n = 5 \cdot 10 \cdot 4^{10} = 52{,}428{,}800" /> (ignoring the fixed end markers). Run longer than that and it must be looping.</p>
+        </Exercise>
+        <Exercise n={2} level="medium" q={<>Describe an LBA for <M t="\{w\#w : w \in \{0,1\}^*\}" />.</>}>
+          <p>Zig-zag: cross off the first unmarked symbol left of <code>#</code>, remembering it in the state; move right past <code>#</code> to the first unmarked symbol and check that it matches, crossing it off; return left. When the left side is exhausted, check that the right side is too. Only the input cells are used.</p>
+        </Exercise>
+        <Exercise n={3} level="medium" q="Why is a grammar with the rule AB → C not context-sensitive? Does it matter?">
+          <p>It shrinks the string (<M t="2 \to 1" />). With shrinking rules, intermediate strings can be much longer than the final word, so the derivation no longer fits in linear space. Allowing such rules gives the full power of unrestricted grammars (Type 0).</p>
+        </Exercise>
+        <Exercise n={4} level="hard" q="Modify the aⁿbⁿcⁿ machine to recognise aⁿbⁿcⁿdⁿ. What changes?">
+          <p>Add one more marking phase: after crossing off a c (as Z), keep moving right past c’s and W’s to the first d and write W, then turn back. The final check walks over Y, Z and W. The pattern generalises to any number of blocks, which no PDA can do.</p>
+        </Exercise>
+      </Section>
+    </ChapterShell>
+  );
+}
