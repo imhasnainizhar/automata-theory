@@ -1,4 +1,4 @@
-name: Check site
+name: Check
 
 on:
   push:
@@ -13,12 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
-      - name: Links, diagram specs and math delimiters
-        run: python scripts/check_site.py
-      - name: JavaScript syntax
-        run: |
-          node --check assets/site.js
-          node --check assets/automata.js
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Types and machine specs
+        run: npm run check
+      - name: Production build
+        run: npm run build

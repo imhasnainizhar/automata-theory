@@ -1,73 +1,76 @@
-# Automata, A to Z
+# WhatAutomata
 
-[![Check site](https://github.com/imhasnainizhar/automata-theory/actions/workflows/check.yml/badge.svg)](https://github.com/imhasnainizhar/automata-theory/actions/workflows/check.yml)
+[![Check](https://github.com/imhasnainizhar/automata-theory/actions/workflows/check.yml/badge.svg)](https://github.com/imhasnainizhar/automata-theory/actions/workflows/check.yml)
 [![Code: MIT](https://img.shields.io/badge/code-MIT-blue.svg)](LICENSE)
 [![Content: CC BY 4.0](https://img.shields.io/badge/content-CC%20BY%204.0-lightgrey.svg)](LICENSE-CONTENT.md)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-An open-source, intuition-first course on **automata theory, formal languages, computability and complexity** — from "what is a string?" to the Halting Problem and P vs NP.
+**Learn automata theory by playing with machines.** WhatAutomata is an open-source, intuition-first course that teaches you the four classical machines (finite, pushdown, linear-bounded and Turing) by letting you run them in the browser, and connects each one to the class of formal languages it recognises.
 
-**Read it online:** https://imhasnainizhar.github.io/automata-theory/
+## Course structure
 
-## What's inside
-
-| Part | Chapters |
+| Group | Chapters |
 |---|---|
-| I · Foundations | The big picture · The mathematical toolkit (sets, strings, languages, proofs, countability) |
-| II · Regular languages | DFAs · NFAs & subset construction · Regular expressions & Kleene's theorem · Closure, decision properties & the pumping lemma · Myhill–Nerode, minimization, Mealy/Moore machines |
-| III · Context-free languages | CFGs, parse trees, ambiguity, CNF, CYK · Pushdown automata · CFL pumping lemma & closure |
-| IV · Computability | Turing machines & Church–Turing thesis · Decidability & the Halting Problem · Reductions, Rice's theorem, PCP · The Chomsky hierarchy |
-| V · Complexity | P, NP, NP-completeness, Cook–Levin, coNP, PSPACE, L/NL |
-| VI · Mastery | Real-world applications · Cheat sheet & mixed practice problems |
+| Begin | Introduction · Formal Languages & Foundations · Automata Intuition (including a CPU control-unit walkthrough) |
+| Finite Automata | Deterministic (DFA) · Nondeterministic (NFA) |
+| Pushdown Automata | Deterministic (DPDA) · Nondeterministic (NPDA) |
+| Linear Bounded Automata | LBA (deterministic and nondeterministic) |
+| Turing Machines | Deterministic (DTM) · Nondeterministic (NTM) |
+| Synthesis | The Big Picture: hierarchy, determinism compared, decidability, complexity |
 
-Every chapter has **Intuition** boxes, precise **definitions**, **theorems with proofs**, common **pitfalls**, **exercises with hidden solutions**, and **takeaways**.
+Every machine chapter follows the same eight-part template:
 
-## Interactive features
+1. **Intuition**: what problem does this machine solve?
+2. **Visual machine**: interactive states, transitions and inputs.
+3. **Execution**: trace how input moves through the machine.
+4. **Formal definition**: the mathematics, plus a plain-English reading.
+5. **Corresponding language**: which languages it recognises.
+6. **Grammar connection**: how those languages are generated.
+7. **Limitations**: what this machine cannot recognise.
+8. **Exercises**: build machines and test strings.
 
-- Runnable **DFA / NFA** diagrams — step through an input and watch the active state set.
-- A **nondeterministic PDA** simulator that searches all branches and replays the accepting run with its stack.
-- **Turing machine** simulators with a live tape and configuration display.
-- A **regex lab**, a **pumping-lemma game**, and auto-drawn **parse trees**.
-- Progress tracking (stored locally in your browser) and light/dark themes.
+## Interactive pieces
 
-## Running locally
+- DFA/NFA simulators with active-state sets, ε-closure and traces
+- PDA simulator with a live stack, plus "parallel worlds" and "accepting branch" views for nondeterminism
+- Turing machine and LBA simulators with tapes, end markers and branch views for NTMs
+- A CPU control unit, a lexer (DFA) and an LL(1) parser (DPDA), each with its components explained
+- Grammar derivation playground with live parse trees, a subset-construction stepper, a pumping-lemma game, a DFA builder with automatic checking, and prediction quizzes
 
-It's a static site with no build step:
+## Tech
 
-```bash
-python -m http.server 8000
-```
-
-Then open http://localhost:8000.
-
-## Authoring diagrams
-
-State diagrams are declared in HTML and rendered by `assets/automata.js`:
-
-```html
-<figure class="fa" data-fa='{"type":"dfa","states":{"q0":[100,100],"q1":[300,100]},
-  "start":"q0","accept":["q1"],"edges":[["q0","q1","1"],["q1","q0","0"]],"test":"101"}'>
-  <figcaption>…</figcaption>
-</figure>
-```
-
-`type` can be `dfa`, `nfa`, `pda` (labels `a,X→Y`), `tm` (labels `a→b,R` or `a,b→R`) or `static`. Parse trees use `<figure class="tree" data-tree="S[a S[ε] b]">`.
-
-Math is rendered with [KaTeX](https://katex.org/).
-
-Before sending changes, run the checker (Python 3, no dependencies). CI runs it on every push and pull request:
+[Next.js](https://nextjs.org) (App Router) · React · TypeScript · [KaTeX](https://katex.org) for math, rendered at build time. There are no UI frameworks: the styles are a single hand-written design system in `src/app/globals.css`.
 
 ```bash
-python scripts/check_site.py
+npm install
+npm run dev        # http://localhost:3000
+npm run check      # type-check + verify every machine against its intended language
+npm run build      # production build
+```
+
+### Deploying to Vercel
+
+Import the repository in Vercel; it detects Next.js automatically and needs no configuration. Pages are prerendered, and the GitHub star count is refreshed at most once per hour. To point the star counter and links at a different repository, edit `repo` in `src/lib/site.ts`.
+
+## Project layout
+
+```
+src/app/                  routes: landing page, /learn index, /learn/[slug]
+src/components/           chrome (nav, dock, sidebar, footer), content blocks
+src/components/machines/  StateDiagram, FASim, PDASim, TMSim
+src/components/widgets/   hero playground, CPU, lexer, parser, grammar playground, builders, quizzes
+src/content/chapters.ts   chapter list, groups, icons and section outline
+src/content/specs.ts      every machine used in the course
+src/content/pages/        one file per chapter
+src/lib/machines.ts       diagram geometry and simulation engines (no React)
+scripts/check-specs.mts   brute-force check that each machine accepts the right language
 ```
 
 ## Contributing
 
-Found a mistake, have a clearer explanation, or want to add exercises or a new interactive machine? Contributions are very welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the writing style and diagram format, and [open an issue](https://github.com/imhasnainizhar/automata-theory/issues/new/choose) to report errors. Please follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+Corrections, clearer explanations, new exercises and new machines are all welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 
-- **Course content** (text, exercises, solutions, diagrams) — [CC BY 4.0](LICENSE-CONTENT.md): reuse it in your own courses and notes, with attribution.
-- **Code** (`assets/`, `scripts/`, workflows) — [MIT](LICENSE).
-
-Notation follows Michael Sipser’s *Introduction to the Theory of Computation*; all text and examples here are original.
+- **Course content** (text, exercises, diagrams): [CC BY 4.0](LICENSE-CONTENT.md)
+- **Code**: [MIT](LICENSE)

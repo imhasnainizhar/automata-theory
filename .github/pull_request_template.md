@@ -1,6 +1,6 @@
 ## What does this change?
 
-<!-- e.g. "Fixes the ε-closure example in Chapter 4", "Adds three exercises on CNF" -->
+<!-- e.g. "Fixes the ε-closure example in the NFA chapter", "Adds an exercise on CNF" -->
 
 ## Why?
 
@@ -8,7 +8,7 @@
 
 ## Checklist
 
-- [ ] `python scripts/check_site.py` passes
-- [ ] Previewed the changed pages locally (light and dark mode, and phone width)
-- [ ] New math uses `$…$` / `$$…$$` and there are no bare `$` signs in prose
-- [ ] Content follows the chapter structure (Intuition → Definition → Examples → Pitfalls → Exercises → Takeaways)
+- [ ] `npm run check` passes (types + every machine accepts its intended language)
+- [ ] `npm run build` succeeds
+- [ ] Previewed the changed pages on desktop and at phone width
+- [ ] Machine chapters keep the eight-part template (Intuition → Visual machine → Execution → Formal definition → Corresponding language → Grammar connection → Limitations → Exercises)

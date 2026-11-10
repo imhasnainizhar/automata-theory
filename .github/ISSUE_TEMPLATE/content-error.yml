@@ -7,7 +7,7 @@ body:
     attributes:
       label: Where?
       description: Chapter and section (or paste the page URL with its #anchor).
-      placeholder: "Chapter 6 · Using the pumping lemma: it is a game"
+      placeholder: "DFA chapter · vii. Limitations"
     validations:
       required: true
   - type: textarea
