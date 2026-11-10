@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deterministic Finite Automata · Automata A to Z</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script defer src="assets/automata.js"></script>
+<script defer src="assets/site.js"></script>
+</head>
+<body data-page="03-dfa">
+<main id="content">
+<article class="prose">
+<div class="kicker">Chapter 3 · Regular Languages</div>
+<h1>Deterministic Finite Automata</h1>
+<p class="lede">The simplest useful model of computation: a machine that reads its input once, left to right, and can remember only one of finitely many things. Learning to design these is learning to ask the most important question in computing — <em>what do I actually need to remember?</em></p>
+<div class="chapter-meta"><span class="chip">⏱ 60 min</span><span class="chip">Prerequisite: Chapter 2</span><span class="chip">4 interactive machines</span></div>
+
+<h2>The intuition</h2>
+<div class="box intuition">
+  <div class="box-title">Intuition — a state is a summary of the past</div>
+  <p>Picture someone reading a very long string, one symbol at a time, through a tiny window. They cannot go back, and they have a small whiteboard that can show only one of a fixed set of messages. After each symbol they may erase the whiteboard and write a different message. At the end, they must say <em>yes</em> or <em>no</em> by looking only at the whiteboard.</p>
+  <p>The messages are the <strong>states</strong>. The rule “if the board says X and I read symbol a, write Y” is the <strong>transition function</strong>. The design challenge is choosing messages that summarize <em>everything about the past that could matter for the future</em> — and nothing more.</p>
+</div>
+<p>“Deterministic” means there is never a choice: from each state, each symbol leads to exactly one next state. The machine’s behaviour on any input is completely determined.</p>
+
+<h2>Formal definition</h2>
+<div class="box definition">
+  <div class="box-title">Definition — DFA</div>
+  <p>A <strong>deterministic finite automaton</strong> is a 5-tuple $M = (Q, \Sigma, \delta, q_0, F)$ where</p>
+  <ul>
+    <li>$Q$ is a finite set of <strong>states</strong>;</li>
+    <li>$\Sigma$ is a finite <strong>input alphabet</strong>;</li>
+    <li>$\delta : Q \times \Sigma \to Q$ is the <strong>transition function</strong> (total: defined for every state and symbol);</li>
+    <li>$q_0 \in Q$ is the <strong>start state</strong>;</li>
+    <li>$F \subseteq Q$ is the set of <strong>accept</strong> (final) states.</li>
+  </ul>
+</div>
+<p>To talk about whole strings we extend $\delta$ to the <strong>extended transition function</strong> $\hat\delta : Q \times \Sigma^* \to Q$, defined by induction on the string:</p>
+<p>$$\hat\delta(q, \varepsilon) = q \qquad\qquad \hat\delta(q, wa) = \delta\big(\hat\delta(q, w),\, a\big)$$</p>
+<p>In words: on the empty string you stay put; to process $wa$, process $w$ first, then take one more step on $a$.</p>
+<div class="box definition">
+  <div class="box-title">Definition — acceptance and the language of a DFA</div>
+  <p>$M$ <strong>accepts</strong> $w$ if $\hat\delta(q_0, w) \in F$; otherwise it rejects. The <strong>language of $M$</strong> is $L(M) = \{ w \in \Sigma^* : \hat\delta(q_0, w) \in F \}$. A language is <strong>regular</strong> if some DFA recognizes it.</p>
+</div>
+<p>A DFA can be given in three equivalent ways: the tuple, a <strong>state diagram</strong> (circles and arrows), or a <strong>transition table</strong>. Get fluent at switching between them.</p>
+
+<h2>Example 1 — an even number of 0s</h2>
+<p>Language: $L_1 = \{ w \in \{0,1\}^* : w \text{ contains an even number of } 0\text{s}\}$. What must we remember? Only the <em>parity</em> of the zeros seen so far. Two states suffice.</p>
+<figure class="fa" data-fa='{"type":"dfa","w":520,"h":190,"states":{"Even":[150,110],"Odd":[370,110]},"start":"Even","accept":["Even"],"edges":[["Even","Odd","0"],["Odd","Even","0"],["Even","Even","1",null,"up"],["Odd","Odd","1",null,"up"]],"test":"10100"}'>
+  <figcaption><b>Parity of zeros.</b> Reading a 1 changes nothing; reading a 0 flips the parity. Try <code>10100</code> (three 0s, rejected) and <code>1001</code> (accepted).</figcaption>
+</figure>
+<div class="table-wrap"><table>
+<tr><th>$\delta$</th><th class="c">0</th><th class="c">1</th></tr>
+<tr><td>→ * Even</td><td class="c">Odd</td><td class="c">Even</td></tr>
+<tr><td>Odd</td><td class="c">Even</td><td class="c">Odd</td></tr>
+</table></div>
+<p>In a transition table, <code>→</code> marks the start state and <code>*</code> marks accept states.</p>
+
+<h2>Example 2 — binary numbers divisible by 3</h2>
+<p>Read a binary number most significant bit first. If the prefix so far has value $n$, appending bit $b$ gives value $2n + b$. We cannot store $n$ (it grows without bound), but we only care about $n \bmod 3$, and</p>
+<p>$$(2n + b) \bmod 3 = \big(2 \cdot (n \bmod 3) + b\big) \bmod 3.$$</p>
+<p>So the remainder alone determines the next remainder. Three states, one per remainder:</p>
+<figure class="fa" data-fa='{"type":"dfa","w":520,"h":190,"states":{"r0":[110,105],"r1":[260,105],"r2":[410,105]},"start":"r0","accept":["r0"],"edges":[["r0","r0","0",null,"up"],["r0","r1","1"],["r1","r0","1"],["r1","r2","0"],["r2","r1","0"],["r2","r2","1",null,"up"]],"test":"10010"}'>
+  <figcaption><b>Divisible by 3.</b> From $r_1$: reading 0 gives $2\cdot1+0 = 2$, reading 1 gives $3 \equiv 0$. From $r_2$: 0 gives $4 \equiv 1$, 1 gives $5 \equiv 2$. Try <code>10010</code> (18) and <code>111</code> (7).</figcaption>
+</figure>
+<div class="box intuition">
+  <div class="box-title">Intuition — remember the answer to the future’s question</div>
+  <p>The machine does not need to know the number; it needs to know <em>which remainder the future will be built on</em>. This generalizes: a DFA for “divisible by $k$” in base $b$ needs exactly $k$ states, with $\delta(r, d) = (b\cdot r + d) \bmod k$.</p>
+</div>
+
+<h2>Example 3 — strings that end in 01</h2>
+<p>Here we must remember how much of the target pattern <code>01</code> we have just seen at the end of the input:</p>
+<ul>
+  <li>$q_0$: the input does not end in <code>0</code> or <code>01</code> (nothing useful).</li>
+  <li>$q_1$: the input ends in <code>0</code> (half of the pattern).</li>
+  <li>$q_2$: the input ends in <code>01</code> (accept).</li>
+</ul>
+<figure class="fa" data-fa='{"type":"dfa","w":520,"h":240,"states":{"q0":[90,110],"q1":[260,110],"q2":[430,110]},"start":"q0","accept":["q2"],"edges":[["q0","q1","0"],["q0","q0","1",null,"up"],["q1","q1","0",null,"up"],["q1","q2","1"],["q2","q1","0"],["q2","q0","1",-0.42]],"test":"11001"}'>
+  <figcaption><b>Ends in 01.</b> Note the transitions out of $q_2$: after <code>…01</code>, a <code>0</code> means we now end in <code>0</code> (go to $q_1$), and a <code>1</code> means we end in <code>11</code> — useless, back to $q_0$.</figcaption>
+</figure>
+<div class="box pitfall">
+  <div class="box-title">Pitfall — forgetting overlaps</div>
+  <p>A frequent mistake in pattern-matching DFAs is to “reset to the start” on a mismatch. In $q_1$ (we just saw <code>0</code>), reading another <code>0</code> must stay in $q_1$, because the <em>new</em> 0 could still be the start of <code>01</code>. The correct target after a mismatch is the state for the <strong>longest suffix of what you have read that is still a prefix of the pattern</strong>. (This is exactly the idea behind the Knuth–Morris–Pratt string-matching algorithm.)</p>
+</div>
+
+<h2>Dead states and completeness</h2>
+<p>Consider $L = \{ w : w \text{ starts with } 1 \}$. Once the first symbol is a <code>0</code>, the answer is “no” forever. We model this with a <strong>dead</strong> (trap) state: a non-accepting state that loops to itself on every symbol.</p>
+<figure class="fa" data-fa='{"type":"dfa","w":520,"h":220,"states":{"s":[110,80],"yes":[330,80],"dead":[330,170]},"dead":["dead"],"start":"s","accept":["yes"],"edges":[["s","yes","1"],["s","dead","0"],["yes","yes","0,1",null,"right"],["dead","dead","0,1",null,"right"]],"test":"1010"}'>
+  <figcaption><b>Starts with 1.</b> The dashed state is a trap. Many textbooks omit dead states from diagrams: <em>any missing transition implicitly goes to a dead state</em>. The simulators on this site follow that convention too.</figcaption>
+</figure>
+
+<h2>A design method that always works</h2>
+<ol>
+  <li><strong>Read the language as a question about the future.</strong> “Given what I have read, what could still happen?”</li>
+  <li><strong>Choose the information to remember.</strong> Parities, remainders, “how much of the pattern have I matched”, “have I already seen X”, “the last $k$ symbols”, small counters capped at some value.</li>
+  <li><strong>Make one state per possible value</strong> of that information.</li>
+  <li><strong>Fill in transitions</strong> by asking: if I know <em>this</em> and read symbol $a$, what do I know now?</li>
+  <li><strong>Mark accept states</strong>: which values mean “yes, if the input ended now”?</li>
+  <li><strong>Check</strong> $\varepsilon$, a few short strings, and boundary cases. Then state the invariant (“in state $q$ iff …”) and, if needed, prove it by induction on $|w|$.</li>
+</ol>
+
+<h2>The product construction</h2>
+<p>Suppose we want strings with an <em>even number of 0s</em> <strong>and</strong> an <em>odd number of 1s</em>. We already know how to track each property with two states. Run both machines <strong>in parallel</strong>: a state is a pair (state of machine 1, state of machine 2).</p>
+<div class="box theorem">
+  <div class="box-title">Construction — product automaton</div>
+  <p>Given $M_1 = (Q_1, \Sigma, \delta_1, s_1, F_1)$ and $M_2 = (Q_2, \Sigma, \delta_2, s_2, F_2)$, define $M = (Q_1 \times Q_2, \Sigma, \delta, (s_1, s_2), F)$ with</p>
+  <p>$$\delta\big((p, q), a\big) = \big(\delta_1(p, a), \delta_2(q, a)\big).$$</p>
+  <p>With $F = F_1 \times F_2$, $L(M) = L(M_1) \cap L(M_2)$. With $F = \{(p,q) : p \in F_1 \text{ or } q \in F_2\}$, $L(M) = L(M_1) \cup L(M_2)$.</p>
+</div>
+<figure class="fa" data-fa='{"type":"dfa","w":520,"h":290,"states":{"EE":[150,70],"EO":[370,70],"OE":[150,220],"OO":[370,220]},"start":"EE","accept":["EO"],"edges":[["EE","EO","1"],["EO","EE","1"],["OE","OO","1"],["OO","OE","1"],["EE","OE","0"],["OE","EE","0"],["EO","OO","0"],["OO","EO","0"]],"test":"0010"}'>
+  <figcaption><b>Even 0s AND odd 1s.</b> First letter: parity of 0s; second letter: parity of 1s. Horizontal arrows flip the 1-parity, vertical arrows flip the 0-parity. Accepting: (Even, Odd). Try <code>0010</code> and <code>001</code>.</figcaption>
+</figure>
+<p>The product has $|Q_1| \cdot |Q_2|$ states. This is our first <strong>closure property</strong>: regular languages are closed under intersection and union. Chapter 6 collects many more.</p>
+
+<h3>Complement</h3>
+<p>For a DFA, complementing the language is trivial: swap accepting and non-accepting states, $F \mapsto Q \setminus F$. This works <em>only because</em> the DFA is complete and deterministic — every string ends in exactly one state. (It fails for NFAs; see the next chapter.) Do not forget to add the dead state before swapping, otherwise strings that “fell off” the diagram will still be rejected.</p>
+
+<h2>Proving a DFA correct</h2>
+<p>For the divisible-by-3 machine, the invariant is:</p>
+<p>$$\hat\delta(r_0, w) = r_k \iff \operatorname{val}(w) \equiv k \pmod 3.$$</p>
+<div class="proof">
+<p>By induction on $|w|$. Base: $\operatorname{val}(\varepsilon) = 0$ and $\hat\delta(r_0, \varepsilon) = r_0$. Step: suppose it holds for $w$, with $\operatorname{val}(w) \equiv k$. Then $\operatorname{val}(wb) = 2\operatorname{val}(w) + b \equiv 2k + b$, and by construction $\delta(r_k, b) = r_{(2k+b) \bmod 3}$. So the invariant holds for $wb$. Since $F = \{r_0\}$, $M$ accepts exactly the multiples of 3.</p>
+</div>
+
+<h2>Exercises</h2>
+<div class="exercises">
+<details class="ex"><summary>Design a DFA over $\{a,b\}$ for strings that <strong>contain</strong> the substring <code>aba</code>. <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>States record the longest suffix that is a prefix of <code>aba</code>: $q_0$ (none), $q_a$, $q_{ab}$, and $q_{aba}$ (found — accepting and absorbing).</p>
+<figure class="fa" data-fa='{"type":"dfa","w":560,"h":200,"states":{"q0":[70,110],"q1":[210,110],"q2":[350,110],"q3":[490,110]},"start":"q0","accept":["q3"],"edges":[["q0","q0","b",null,"up"],["q0","q1","a"],["q1","q1","a",null,"up"],["q1","q2","b"],["q2","q0","b",-0.4],["q2","q3","a"],["q3","q3","a,b",null,"up"]],"test":"bbabba"}'><figcaption>From $q_2$ (seen <code>ab</code>), a <code>b</code> leaves suffix <code>abb</code>, which shares no prefix with <code>aba</code>, so return to $q_0$.</figcaption></figure></div></details>
+
+<details class="ex"><summary>Design a DFA over $\{0,1\}$ for strings whose length is divisible by 3. <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>Three states $c_0, c_1, c_2$ counting length mod 3; every symbol (0 or 1) moves $c_i \to c_{(i+1) \bmod 3}$. Accept $c_0$, which is also the start state (so $\varepsilon$ is accepted, length 0).</p></div></details>
+
+<details class="ex"><summary>Design a DFA for strings over $\{0,1\}$ in which every <code>0</code> is immediately followed by a <code>1</code>. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>Remember whether we owe a <code>1</code>. State $A$ (nothing owed, accepting, start): <code>1</code>→$A$, <code>0</code>→$B$. State $B$ (owe a 1, non-accepting): <code>1</code>→$A$, <code>0</code>→Dead. The dead state loops on both symbols. Equivalently the language is $(1 \cup 01)^*$.</p></div></details>
+
+<details class="ex"><summary>How many states does the product construction need for “length divisible by 3 AND ends in 01”? Can you do better? <span class="lvl med">medium</span></summary>
+<div class="sol"><p>The product has $3 \times 3 = 9$ states. All 9 are reachable and pairwise distinguishable here (the length counter and the suffix tracker are independent), so 9 is in fact minimal. In general the product can sometimes be minimized — Chapter 7 shows how to check.</p></div></details>
+
+<details class="ex"><summary>Give the formal 5-tuple for the “even number of 0s” DFA. <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>$Q = \{E, O\}$, $\Sigma = \{0,1\}$, $q_0 = E$, $F = \{E\}$, and $\delta(E,0)=O$, $\delta(O,0)=E$, $\delta(E,1)=E$, $\delta(O,1)=O$.</p></div></details>
+
+<details class="ex"><summary>Explain why every <strong>finite</strong> language is regular. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>Build a <strong>trie</strong>: one state per prefix of a word in the language, plus a dead state. The start state is $\varepsilon$; from prefix $p$ on symbol $a$ go to $pa$ if it is a prefix of some word, else to dead. Accept the states that are whole words. Finitely many words have finitely many prefixes, so the DFA is finite.</p></div></details>
+
+<details class="ex"><summary>A DFA has $n$ states. Prove that if it accepts any string at all, it accepts one of length less than $n$. <span class="lvl hard">hard</span></summary>
+<div class="sol"><p>Take a shortest accepted string $w$. If $|w| \ge n$, the run on $w$ visits $|w|+1 > n$ states, so some state repeats (pigeonhole). Cut out the loop between the two visits: the shorter string still ends in the same accepting state — contradicting minimality. Hence $|w| \lt n$. This gives an algorithm for “is $L(M)$ empty?”: test all strings shorter than $n$ (or, better, do graph reachability).</p></div></details>
+</div>
+
+<div class="box takeaways">
+  <div class="box-title">Takeaways</div>
+  <ul>
+    <li>A DFA is $(Q,\Sigma,\delta,q_0,F)$ with a <em>total</em>, deterministic $\delta$; it accepts $w$ iff $\hat\delta(q_0,w) \in F$.</li>
+    <li>Design by asking “what must I remember about the past?” — one state per possible summary.</li>
+    <li>The product construction runs two DFAs in parallel: intersection and union are regular.</li>
+    <li>Swapping accept states complements a (complete) DFA.</li>
+    <li>Correctness = an invariant per state, proved by induction on the input length.</li>
+  </ul>
+</div>
+</article>
+</main>
+</body>
+</html>
