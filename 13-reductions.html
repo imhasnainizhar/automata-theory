@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reductions, Rice & PCP · Automata A to Z</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script defer src="assets/automata.js"></script>
+<script defer src="assets/site.js"></script>
+</head>
+<body data-page="13-reductions">
+<main id="content">
+<article class="prose">
+<div class="kicker">Chapter 13 · Computability</div>
+<h1>Reductions, Rice &amp; PCP</h1>
+<p class="lede">Diagonalization gave us one undecidable problem. Reductions give us thousands: if solving B would let us solve A, and A is impossible, then B is impossible too. Rice’s theorem then delivers a sweeping verdict on almost every question about what programs do.</p>
+<div class="chapter-meta"><span class="chip">⏱ 75 min</span><span class="chip">Prerequisite: Chapter 12</span></div>
+
+<h2>The intuition</h2>
+<div class="box intuition">
+  <div class="box-title">Intuition — “if I had a magic box for B…”</div>
+  <p>A <strong>reduction</strong> from A to B is a way to solve A using a solver for B as a subroutine. Mathematicians do this constantly: to find the area of a triangle, reduce it to the area of a rectangle.</p>
+  <p>Reductions carry information in <strong>two</strong> directions:</p>
+  <ul>
+    <li>If B is easy (decidable), then A is easy — use the reduction.</li>
+    <li>If A is hard (undecidable), then B is hard — otherwise A would be easy.</li>
+  </ul>
+  <p>To prove a new problem B undecidable, reduce a <em>known</em> undecidable problem (usually $A_\text{TM}$) <strong>to</strong> B.</p>
+</div>
+<div class="box pitfall">
+  <div class="box-title">Pitfall — the direction of the reduction</div>
+  <p>This is the single most common mistake in the whole course. To show <strong>B</strong> is undecidable, you assume a decider for <strong>B</strong> and build a decider for <strong>$A_\text{TM}$</strong>. Write “$A_\text{TM} \le B$”: the known-hard problem is on the <em>left</em>. Reducing B to $A_\text{TM}$ proves nothing (everything recognizable reduces to $A_\text{TM}$).</p>
+</div>
+
+<h2>First reductions</h2>
+<div class="box example">
+  <div class="box-title">$\textit{HALT}_\text{TM}$ is undecidable</div>
+  <p>Suppose $R$ decides $\textit{HALT}_\text{TM}$. Build $S$ deciding $A_\text{TM}$: on $\langle M, w\rangle$, run $R$ on $\langle M, w\rangle$. If $R$ rejects, $M$ loops on $w$, so reject. If $R$ accepts, $M$ halts on $w$, so simulate $M$ on $w$ to completion — safely — and return its answer. $S$ always halts and decides $A_\text{TM}$, a contradiction.</p>
+</div>
+<div class="box example">
+  <div class="box-title">$E_\text{TM} = \{\langle M\rangle : L(M) = \emptyset\}$ is undecidable</div>
+  <p>Suppose $R$ decides $E_\text{TM}$. Given $\langle M, w\rangle$, construct (without running anything) the machine</p>
+  <p style="padding-left:1em"><em>$M_w$ on input $x$: if $x \ne w$, reject. Otherwise run $M$ on $w$ and accept if it accepts.</em></p>
+  <p>Then $L(M_w) = \{w\}$ if $M$ accepts $w$, and $\emptyset$ otherwise. So run $R$ on $\langle M_w\rangle$ and output the opposite. That decides $A_\text{TM}$ — contradiction.</p>
+</div>
+<p>Notice the trick: we never <em>run</em> $M_w$. We only <em>build its description</em> and hand it to the hypothetical decider. Constructing a machine whose language encodes the answer to our question is the core technique.</p>
+<div class="box example">
+  <div class="box-title">$\textit{REGULAR}_\text{TM} = \{\langle M\rangle : L(M) \text{ is regular}\}$ is undecidable</div>
+  <p>Given $\langle M, w\rangle$, build <em>$M_2$ on $x$: if $x$ has the form $0^n1^n$, accept. Otherwise run $M$ on $w$ and accept if $M$ accepts.</em> If $M$ accepts $w$, $L(M_2) = \Sigma^*$ (regular); otherwise $L(M_2) = \{0^n1^n\}$ (not regular). A decider for $\textit{REGULAR}_\text{TM}$ would therefore decide $A_\text{TM}$.</p>
+</div>
+<div class="box example">
+  <div class="box-title">$EQ_\text{TM} = \{\langle M_1, M_2\rangle : L(M_1) = L(M_2)\}$ is undecidable</div>
+  <p>Reduce from $E_\text{TM}$: $L(M) = \emptyset$ iff $M$ is equivalent to a machine $M_\emptyset$ that rejects everything. So a decider for $EQ_\text{TM}$, run on $\langle M, M_\emptyset\rangle$, decides $E_\text{TM}$.</p>
+</div>
+
+<h2>Mapping reductions</h2>
+<p>Most reductions above have a special, clean shape: transform the input, then ask the B-oracle once and pass its answer through (possibly flipped).</p>
+<div class="box definition">
+  <div class="box-title">Definition — mapping reducibility</div>
+  <p>$A \le_m B$ if there is a <strong>computable function</strong> $f : \Sigma^* \to \Sigma^*$ such that for every $w$,</p>
+  <p>$$w \in A \iff f(w) \in B.$$</p>
+</div>
+<div class="box theorem">
+  <div class="box-title">Properties of $\le_m$</div>
+  <ul>
+    <li>If $A \le_m B$ and $B$ is decidable, then $A$ is decidable.</li>
+    <li>If $A \le_m B$ and $B$ is Turing-recognizable, then $A$ is Turing-recognizable.</li>
+    <li>Contrapositives: if $A$ is undecidable (resp. unrecognizable), so is $B$.</li>
+    <li>$A \le_m B \iff \overline{A} \le_m \overline{B}$ (same $f$), and $\le_m$ is transitive.</li>
+  </ul>
+</div>
+<p>Mapping reductions preserve recognizability, which lets us prove problems are not even recognizable. For example $EQ_\text{TM}$ is <strong>neither recognizable nor co-recognizable</strong>:</p>
+<ul>
+  <li>$A_\text{TM} \le_m \overline{EQ_\text{TM}}$: map $\langle M, w\rangle$ to $\langle M_1, M_2\rangle$ where $M_1$ rejects everything and $M_2$ accepts everything if $M$ accepts $w$ (ignore the input, run $M$ on $w$). They differ iff $M$ accepts $w$. Equivalently $\overline{A_\text{TM}} \le_m EQ_\text{TM}$, so $EQ_\text{TM}$ is not recognizable.</li>
+  <li>$A_\text{TM} \le_m EQ_\text{TM}$: same, but let $M_1$ accept everything. They are equal iff $M$ accepts $w$. So $\overline{EQ_\text{TM}}$ is not recognizable either.</li>
+</ul>
+
+<h2>Rice’s theorem</h2>
+<p>Every reduction above has the same flavour: build a machine whose <em>language</em> depends on whether $M$ accepts $w$. Rice’s theorem says this always works.</p>
+<div class="box theorem">
+  <div class="box-title">Rice’s theorem (1951)</div>
+  <p>Let $P$ be any property of Turing-recognizable languages that is <strong>nontrivial</strong> (some TM’s language has it and some does not). Then</p>
+  <p>$$\{\langle M\rangle : L(M) \text{ has property } P\}$$</p>
+  <p>is undecidable.</p>
+</div>
+<div class="proof sketch">
+<p>WLOG $\emptyset$ does not have $P$ (otherwise use $\overline{P}$). Since $P$ is nontrivial, some TM $T$ has $L(T) \in P$. Given $\langle M, w\rangle$, build <em>$M_w$ on $x$: run $M$ on $w$; if it accepts, run $T$ on $x$ and answer as $T$ does.</em> If $M$ accepts $w$, $L(M_w) = L(T)$, which has $P$; otherwise $L(M_w) = \emptyset$, which does not. A decider for $P$ would decide $A_\text{TM}$.</p>
+</div>
+<div class="box intuition">
+  <div class="box-title">Intuition — you cannot predict behaviour without running it</div>
+  <p>Any question of the form “what does this program <em>do</em>?” — does it ever print “hello”, is it a virus, does it compute the same function as that one, does it ever divide by zero, is this code reachable — is undecidable in general. This is why static analysers, type checkers and antivirus tools must be <em>approximations</em>: they either miss some bugs, or raise false alarms, or both.</p>
+</div>
+<div class="table-wrap"><table>
+<tr><th>Question about TM $M$</th><th>Rice applies?</th><th>Decidable?</th></tr>
+<tr><td>Is $L(M)$ empty / finite / regular / context-free?</td><td>yes — a property of $L(M)$</td><td class="no">no</td></tr>
+<tr><td>Does $M$ accept the string <code>hello</code>?</td><td>yes</td><td class="no">no</td></tr>
+<tr><td>Is $L(M) = L(M')$ for a fixed $M'$?</td><td>yes</td><td class="no">no</td></tr>
+<tr><td>Does $M$ have more than 10 states?</td><td>no — property of the machine, not its language</td><td class="yes">yes</td></tr>
+<tr><td>Does $M$ halt on $\varepsilon$ within 100 steps?</td><td>no — about running time</td><td class="yes">yes</td></tr>
+<tr><td>Does $M$ ever move its head left on input $\varepsilon$?</td><td>no — not a language property</td><td class="yes">yes (surprisingly — a finite analysis suffices)</td></tr>
+<tr><td>Is $L(M)$ recognizable?</td><td>trivial property (always true)</td><td class="yes">yes (answer: always)</td></tr>
+</table></div>
+
+<h2>The Post Correspondence Problem</h2>
+<p>Undecidability is not only about machines. Here is a puzzle about dominoes that no algorithm can solve.</p>
+<div class="box definition">
+  <div class="box-title">Definition — PCP</div>
+  <p>Given a finite collection of dominoes $\left[\frac{t_1}{b_1}\right], \dots, \left[\frac{t_k}{b_k}\right]$ (strings on top and bottom), is there a non-empty sequence $i_1, \dots, i_n$ (repetitions allowed) such that $t_{i_1}t_{i_2}\cdots t_{i_n} = b_{i_1}b_{i_2}\cdots b_{i_n}$? Such a sequence is a <strong>match</strong>.</p>
+</div>
+<p>Example collection:</p>
+<div class="dominos">
+  <div class="domino"><span>b</span><span>ca</span><small>1</small></div>
+  <div class="domino"><span>a</span><span>ab</span><small>2</small></div>
+  <div class="domino"><span>ca</span><span>a</span><small>3</small></div>
+  <div class="domino"><span>abc</span><span>c</span><small>4</small></div>
+</div>
+<p>A match: dominoes 2, 1, 3, 2, 4:</p>
+<div class="dominos">
+  <div class="domino"><span>a</span><span>ab</span></div>
+  <div class="domino"><span>b</span><span>ca</span></div>
+  <div class="domino"><span>ca</span><span>a</span></div>
+  <div class="domino"><span>a</span><span>ab</span></div>
+  <div class="domino"><span>abc</span><span>c</span></div>
+</div>
+<p>Top: <code>a·b·ca·a·abc</code> = <code>abcaaabc</code>. Bottom: <code>ab·ca·a·ab·c</code> = <code>abcaaabc</code>. ✓</p>
+<div class="box theorem">
+  <div class="box-title">Theorem (Post, 1946) — PCP is undecidable</div>
+</div>
+<div class="proof sketch">
+<p>Reduce $A_\text{TM}$ to PCP. Given $\langle M, w\rangle$, design dominoes so that the only way to build a match is to write out an <strong>accepting computation history</strong> of $M$ on $w$: a sequence of configurations $\#C_1\#C_2\#\cdots\#C_\text{acc}\#$. The bottom row always runs one configuration ahead of the top; each domino copies a tape symbol or implements one transition of $M$, so the top can only “catch up” with the bottom if the bottom contains the next valid configuration. Only reaching $q_\text{acc}$ unlocks dominoes that let the top finish. So a match exists iff $M$ accepts $w$.</p>
+</div>
+
+<h3>Computation histories: undecidability for grammars</h3>
+<p>The computation-history idea is extremely versatile. A history is a string, and checking that a string is a <em>valid</em> accepting history is a very local check (each configuration follows from the previous one by one rule). That local check is so simple that weak models can perform it — so questions about weak models become undecidable:</p>
+<ul>
+  <li>$ALL_\text{CFG} = \{\langle G\rangle : L(G) = \Sigma^*\}$ is undecidable: a CFG can generate exactly the strings that are <em>not</em> accepting histories of $M$ on $w$ (every error is local and can be guessed). So $L(G) = \Sigma^*$ iff $M$ does not accept $w$.</li>
+  <li>Hence $EQ_\text{CFG}$ is undecidable (compare with a grammar for $\Sigma^*$).</li>
+  <li>From PCP: whether a CFG is <strong>ambiguous</strong>, and whether two CFGs generate intersecting languages, are undecidable.</li>
+  <li>$E_\text{LBA}$ (emptiness for linear-bounded automata) is undecidable, though $A_\text{LBA}$ is decidable (Chapter 14).</li>
+</ul>
+
+<h2>Beyond: oracles and degrees</h2>
+<p>If we imagine a machine equipped with a magic oracle for $A_\text{TM}$, it can solve problems ordinary TMs cannot — yet the same diagonal argument shows it cannot solve <em>its own</em> halting problem. This yields an infinite hierarchy of ever-harder problems (the <em>arithmetical hierarchy</em> and <em>Turing degrees</em>). Gödel’s incompleteness theorem lives here too: the set of true statements of arithmetic is not even recognizable, so no consistent, effectively axiomatized theory proves all of them.</p>
+
+<h2>Exercises</h2>
+<div class="exercises">
+<details class="ex"><summary>Show $\{\langle M\rangle : M \text{ accepts } 0110\}$ is undecidable (a) by Rice’s theorem and (b) by a direct reduction. <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>(a) “Contains 0110” is a nontrivial property of $L(M)$. (b) Given $\langle M, w\rangle$, build $M'$ that ignores its input, runs $M$ on $w$, and accepts if $M$ accepts. $M'$ accepts 0110 iff $M$ accepts $w$.</p></div></details>
+
+<details class="ex"><summary>Is $\{\langle M\rangle : M \text{ is a TM with an even number of states}\}$ decidable? <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>Yes — it is a syntactic property of the description; count the states. Rice’s theorem does not apply because two machines with the same language can differ in this property.</p></div></details>
+
+<details class="ex"><summary>Is $\{\langle M\rangle : L(M) \text{ is Turing-recognizable}\}$ decidable? <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>Yes, trivially: every $L(M)$ is recognizable, so the decider accepts every valid encoding. Rice requires a <em>nontrivial</em> property.</p></div></details>
+
+<details class="ex"><summary>Show that $\{\langle M\rangle : M \text{ halts on every input}\}$ is not recognizable. <span class="lvl hard">hard</span></summary>
+<div class="sol"><p>Reduce $\overline{\textit{HALT}_\text{TM}}$ (not recognizable) to it with a mapping reduction: map $\langle M, w\rangle$ to $M'$ which, on input $x$, runs $M$ on $w$ for $|x|$ steps; if $M$ has halted by then, $M'$ loops; otherwise it halts. If $M$ never halts on $w$, $M'$ halts on every $x$. If $M$ halts on $w$ after $t$ steps, $M'$ loops on all $x$ with $|x| \ge t$. So $M'$ is total iff $M$ does not halt on $w$.</p></div></details>
+
+<details class="ex"><summary>Find a match, or argue none exists, for the dominoes $\left[\frac{ab}{a}\right], \left[\frac{ba}{bab}\right]$. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>A match must start with a domino whose top and bottom begin the same way: both do. Try $\left[\frac{ab}{a}\right]$ first: top <code>ab</code>, bottom <code>a</code> — the bottom is behind by <code>b</code>; next domino’s bottom must start with <code>b</code>: $\left[\frac{ba}{bab}\right]$, giving top <code>abba</code>, bottom <code>abab</code> — mismatch. Starting with $\left[\frac{ba}{bab}\right]$: the bottom is ahead by <code>b</code>, so the next top must start with <code>b</code> — only domino 2 again, giving top <code>baba</code> and bottom <code>babbab</code>, which disagree at position 4. Every branch dies, so no match exists. (For specific small instances we can often decide; PCP is undecidable only in general.)</p></div></details>
+
+<details class="ex"><summary>Where does the reduction $A_\text{TM} \le_m E_\text{TM}$ fail, and how is that consistent with $E_\text{TM}$ being co-recognizable? <span class="lvl hard">hard</span></summary>
+<div class="sol"><p>The construction $M_w$ maps “$M$ accepts $w$” to “$L(M_w)$ is <em>non</em>-empty”, i.e. it gives $A_\text{TM} \le_m \overline{E_\text{TM}}$, not $A_\text{TM} \le_m E_\text{TM}$. Indeed $\overline{E_\text{TM}}$ is recognizable (dovetail over all inputs, accept when something is accepted), so $E_\text{TM}$ is co-recognizable, and it is not recognizable (else it would be decidable).</p></div></details>
+</div>
+
+<div class="box takeaways">
+  <div class="box-title">Takeaways</div>
+  <ul>
+    <li>To show B undecidable: assume a decider for B, build a decider for $A_\text{TM}$ (direction: $A_\text{TM} \le B$).</li>
+    <li>Technique: construct (don’t run) a machine whose language encodes whether $M$ accepts $w$.</li>
+    <li>$A \le_m B$: computable $f$ with $w \in A \iff f(w) \in B$; preserves decidability and recognizability.</li>
+    <li>Rice: every nontrivial property of the <em>language</em> of a TM is undecidable.</li>
+    <li>PCP is undecidable; via computation histories, so are CFG universality, equivalence and ambiguity.</li>
+  </ul>
+</div>
+</article>
+</main>
+</body>
+</html>
