@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Myhill–Nerode & Minimization · Automata A to Z</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script defer src="assets/automata.js"></script>
+<script defer src="assets/site.js"></script>
+</head>
+<body data-page="07-minimization">
+<main id="content">
+<article class="prose">
+<div class="kicker">Chapter 7 · Regular Languages</div>
+<h1>Myhill–Nerode &amp; Minimization</h1>
+<p class="lede">What <em>is</em> a state, really? The Myhill–Nerode theorem answers this exactly: states are classes of inputs that the future cannot tell apart. This gives a perfect characterization of regular languages, an algorithm for the smallest possible DFA, and a cleaner way to prove non-regularity.</p>
+<div class="chapter-meta"><span class="chip">⏱ 60 min</span><span class="chip">Prerequisite: Chapter 6</span></div>
+
+<h2>The intuition</h2>
+<div class="box intuition">
+  <div class="box-title">Intuition — two pasts are “the same” if no future can tell them apart</div>
+  <p>Take the language “ends in 01”. After reading <code>110</code> or <code>0</code> or <code>1010</code>, is there anything left to distinguish them? Whatever comes next, all three behave identically: each ends in <code>0</code>, so appending <code>1</code> accepts and anything else depends only on what follows. A DFA may as well be in the same state after all three.</p>
+  <p>But <code>0</code> and <code>1</code> <em>are</em> different: append <code>1</code> and you get <code>01</code> (accept) versus <code>11</code> (reject). The string <code>1</code> is a <strong>distinguishing extension</strong>. Any DFA must be in different states after <code>0</code> and after <code>1</code>.</p>
+</div>
+
+<h2>The Myhill–Nerode relation</h2>
+<div class="box definition">
+  <div class="box-title">Definition — distinguishable strings, ≡<sub>L</sub></div>
+  <p>Let $L \subseteq \Sigma^*$. Strings $x$ and $y$ are <strong>distinguishable by $L$</strong> if there is some $z$ such that exactly one of $xz$, $yz$ is in $L$. Otherwise they are <strong>indistinguishable</strong>, written $x \equiv_L y$:</p>
+  <p>$$x \equiv_L y \iff \forall z \in \Sigma^* :\ (xz \in L \Leftrightarrow yz \in L).$$</p>
+</div>
+<p>$\equiv_L$ is an equivalence relation (check it!). Its number of classes is called the <strong>index</strong> of $L$.</p>
+
+<div class="box theorem">
+  <div class="box-title">Theorem (Myhill–Nerode, 1958)</div>
+  <p>$L$ is regular <strong>if and only if</strong> $\equiv_L$ has finitely many equivalence classes. Moreover, the number of classes equals the number of states of the <strong>smallest</strong> DFA for $L$.</p>
+</div>
+<div class="proof sketch">
+<p>(⇒) If DFA $M$ recognizes $L$ and $\hat\delta(q_0,x) = \hat\delta(q_0,y)$, then $x$ and $y$ lead to the same state and every extension $z$ treats them alike, so $x \equiv_L y$. Hence the number of classes is at most the number of states. (⇐) If there are finitely many classes, build a DFA whose states <em>are</em> the classes: start $[\varepsilon]$, $\delta([x], a) = [xa]$ (well-defined because $\equiv_L$ is preserved by appending), accept $\{[x] : x \in L\}$. It recognizes $L$ and has exactly as many states as classes, so it is minimal.</p>
+</div>
+
+<h2>Proving non-regularity with Myhill–Nerode</h2>
+<p>To show $L$ is not regular, exhibit <strong>infinitely many pairwise distinguishable strings</strong>. This is often cleaner than pumping.</p>
+<div class="box example">
+  <div class="box-title">Example — $\{0^n1^n\}$ again</div>
+  <p>Consider $0^0, 0^1, 0^2, \dots$ For $i \ne j$, the extension $z = 1^i$ distinguishes them: $0^i1^i \in L$, $0^j1^i \notin L$. Infinitely many classes ⇒ not regular.</p>
+</div>
+<div class="box example">
+  <div class="box-title">Example — palindromes over {a, b}</div>
+  <p>Strings $a^ib$ for $i \ge 0$: extension $z = a^i$ gives $a^iba^i$ (palindrome) versus $a^jba^i$ for $j \ne i$ (not). Infinitely many distinguishable strings ⇒ not regular.</p>
+</div>
+<p>And for lower bounds on DFA size: “the $n$-th symbol from the end is 1” has at least $2^n$ classes (all $2^n$ strings of length $n$ are pairwise distinguishable), so no DFA with fewer than $2^n$ states exists.</p>
+
+<h2>DFA minimization</h2>
+<p>A DFA can be minimized in two steps:</p>
+<ol>
+  <li><strong>Remove unreachable states</strong> (graph search from the start).</li>
+  <li><strong>Merge equivalent states.</strong> States $p, q$ are equivalent if for every $z$, $\hat\delta(p,z) \in F \iff \hat\delta(q,z) \in F$.</li>
+</ol>
+
+<h3>The table-filling algorithm</h3>
+<p>Find all <strong>distinguishable</strong> pairs; whatever is left is equivalent.</p>
+<pre><code>mark every pair {p, q} where exactly one of p, q is accepting   // distinguished by ε
+repeat until nothing changes:
+    for every unmarked pair {p, q} and every symbol a:
+        if {δ(p,a), δ(q,a)} is marked:
+            mark {p, q}                                        // distinguished by a·z
+unmarked pairs are equivalent → merge them</code></pre>
+<div class="box intuition">
+  <div class="box-title">Intuition — distinguishing works backwards</div>
+  <p>If $a$ takes $p$ and $q$ to states that some string $z$ distinguishes, then $az$ distinguishes $p$ and $q$. The algorithm discovers distinguishing strings of length 0, then 1, then 2, … until no new ones appear.</p>
+</div>
+
+<h3>Worked example</h3>
+<p>This 5-state DFA accepts strings ending in <code>011</code>. Is it minimal?</p>
+<figure class="fa" data-fa='{"type":"dfa","w":600,"h":300,"states":{"A":[70,150],"B":[230,70],"C":[230,235],"D":[400,70],"E":[540,150]},"start":"A","accept":["E"],"edges":[["A","B","0"],["A","C","1"],["B","B","0",null,"up"],["B","D","1"],["D","B","0"],["C","B","0"],["C","C","1",null,"down"],["D","E","1"],["E","B","0",-0.22],["E","C","1"]],"test":"10011"}'>
+  <figcaption><b>Before minimization</b> (5 states). Notice that $A$ and $C$ have identical outgoing transitions.</figcaption>
+</figure>
+<p>Run the algorithm:</p>
+<ul>
+  <li><strong>Pass 0</strong> (accepting vs. not): mark $\{A,E\}, \{B,E\}, \{C,E\}, \{D,E\}$.</li>
+  <li><strong>Pass 1</strong>: on input 1, $D \to E$ while $A \to C$, $B \to D$, $C \to C$. Since $\{E, C\}$, $\{E, D\}$ are marked, mark $\{A,D\}, \{B,D\}, \{C,D\}$.</li>
+  <li><strong>Pass 2</strong>: on 1, $\{A,B\} \to \{C,D\}$ (marked) — mark $\{A,B\}$. $\{B,C\} \to \{D,C\}$ — mark $\{B,C\}$.</li>
+  <li><strong>Pass 3</strong>: $\{A,C\}$: on 0 both go to $B$, on 1 both go to $C$ — never distinguishable. Done.</li>
+</ul>
+<div class="table-wrap"><table>
+<tr><th></th><th class="c">A</th><th class="c">B</th><th class="c">C</th><th class="c">D</th></tr>
+<tr><th>B</th><td class="c no">× (pass 2)</td><td></td><td></td><td></td></tr>
+<tr><th>C</th><td class="c yes">≡</td><td class="c no">× (pass 2)</td><td></td><td></td></tr>
+<tr><th>D</th><td class="c no">× (1)</td><td class="c no">× (1)</td><td class="c no">× (1)</td><td></td></tr>
+<tr><th>E</th><td class="c no">× (0)</td><td class="c no">× (0)</td><td class="c no">× (0)</td><td class="c no">× (0)</td></tr>
+</table></div>
+<p>Merge $A$ and $C$:</p>
+<figure class="fa" data-fa='{"type":"dfa","w":610,"h":290,"states":{"AC":[70,150],"B":[220,150],"D":[380,150],"E":[540,150]},"start":"AC","accept":["E"],"edges":[["AC","AC","1",null,"up"],["AC","B","0"],["B","B","0",null,"up"],["B","D","1"],["D","B","0"],["D","E","1"],["E","B","0",0.35],["E","AC","1",-0.38]],"test":"10011"}'>
+  <figcaption><b>The minimal DFA</b> (4 states). Each state now has a crisp meaning: AC = “no useful suffix”, B = “ends in 0”, D = “ends in 01”, E = “ends in 011”.</figcaption>
+</figure>
+
+<div class="box theorem">
+  <div class="box-title">Theorem — the minimal DFA is unique</div>
+  <p>For every regular language there is a unique (up to renaming states) minimal complete DFA. Hence two DFAs recognize the same language iff their minimizations are isomorphic — a practical equivalence test.</p>
+</div>
+<p>Faster algorithms exist: <strong>Hopcroft’s algorithm</strong> refines partitions in $O(n \log n)$ for fixed alphabet, and <strong>Brzozowski’s algorithm</strong> (reverse, determinize, reverse, determinize) is a surprising one-liner that works well in practice.</p>
+
+<h2>Machines with output: Moore and Mealy</h2>
+<p>So far our machines only say yes or no. <strong>Finite-state transducers</strong> produce output as they go — the model behind sequential digital circuits, controllers, and simple text filters.</p>
+<div class="box definition">
+  <div class="box-title">Definitions</div>
+  <ul>
+    <li><strong>Moore machine</strong>: output depends on the <em>state</em>, $\lambda : Q \to \Delta$. It emits one output symbol per state visited (including the start).</li>
+    <li><strong>Mealy machine</strong>: output depends on the <em>transition</em>, $\lambda : Q \times \Sigma \to \Delta$. Arrows are labelled $a/b$: “on input $a$, output $b$”.</li>
+  </ul>
+</div>
+<figure class="fa" data-fa='{"type":"static","w":520,"h":200,"states":{"s0":[150,115],"s1":[370,115]},"start":"s0","accept":[],"edges":[["s0","s0","0/0",null,"up"],["s0","s1","1/1"],["s1","s1","1/0",null,"up"],["s1","s0","0/1"]]}'>
+  <figcaption><b>A Mealy “edge detector”.</b> State = previous bit. Output 1 exactly when the current bit differs from the previous one. Input <code>0011010</code> produces <code>0010111</code>.</figcaption>
+</figure>
+<p>Moore and Mealy machines are equally expressive (up to the one-step output offset): convert Mealy → Moore by splitting each state according to the output on its incoming arrows; Moore → Mealy by moving each state’s output onto its incoming arrows. In hardware, Mealy machines react within the same clock cycle (fewer states), while Moore machines have glitch-free outputs (outputs depend only on registers).</p>
+
+<h2>Exercises</h2>
+<div class="exercises">
+<details class="ex"><summary>How many Myhill–Nerode classes does “contains the substring <code>aba</code>” have? Describe them. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>Four: strings with no useful suffix and no occurrence; strings ending in <code>a</code> (no occurrence yet); strings ending in <code>ab</code> (no occurrence yet); strings already containing <code>aba</code>. So the minimal DFA has 4 states.</p></div></details>
+
+<details class="ex"><summary>Use Myhill–Nerode to prove $\{w \in \{a,b\}^* : |w|_a = |w|_b\}$ is not regular. <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>The strings $a^i$, $i \ge 0$, are pairwise distinguishable: $a^i b^i$ is in the language, $a^j b^i$ is not ($j \ne i$). Infinitely many classes.</p></div></details>
+
+<details class="ex"><summary>Minimize the DFA over $\{0,1\}$ with states $1..4$, start 1, accept $\{3, 4\}$, and $\delta(1,0)=2$, $\delta(1,1)=3$, $\delta(2,0)=1$, $\delta(2,1)=4$, $\delta(3,\cdot)=3$, $\delta(4,\cdot)=4$. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>Pass 0 marks $\{1,3\},\{1,4\},\{2,3\},\{2,4\}$. $\{3,4\}$: both loop to themselves, never marked → equivalent. $\{1,2\}$: on 0 → $\{2,1\}$ (unmarked), on 1 → $\{3,4\}$ (unmarked) → equivalent. Minimal DFA: two states, $\{1,2\}$ (start) and $\{3,4\}$ (accept); the language is “contains a 1”.</p></div></details>
+
+<details class="ex"><summary>Show that the minimal DFA for “length divisible by $k$” has exactly $k$ states. <span class="lvl easy">easy</span></summary>
+<div class="sol"><p>Strings $\varepsilon, a, a^2, \dots, a^{k-1}$ are pairwise distinguishable: for $i \lt j \lt k$, append $a^{k-i}$; then $a^{i}a^{k-i}$ has length $k$ (accepted) while $a^j a^{k-i}$ has length $k + (j - i)$, not divisible by $k$. And any string is equivalent to the one with the same length mod $k$. So exactly $k$ classes.</p></div></details>
+
+<details class="ex"><summary>Convert the Mealy edge detector above to a Moore machine. <span class="lvl med">medium</span></summary>
+<div class="sol"><p>Split states by (previous bit, last output): $(0,0)$ start, $(0,1)$, $(1,0)$, $(1,1)$ with Moore output = the second component. On input $b$ from state $(p, \cdot)$ go to $(b, [b \ne p])$. Four states; the start emits an extra initial 0 that the Mealy machine does not.</p></div></details>
+</div>
+
+<div class="box takeaways">
+  <div class="box-title">Takeaways</div>
+  <ul>
+    <li>$x \equiv_L y$ iff no extension $z$ distinguishes them. States of the minimal DFA = classes of $\equiv_L$.</li>
+    <li>Myhill–Nerode: $L$ regular ⇔ finitely many classes. Infinitely many pairwise-distinguishable strings ⇒ not regular.</li>
+    <li>Minimize: delete unreachable states, then table-fill distinguishable pairs and merge the rest. The result is unique.</li>
+    <li>Moore (output on states) and Mealy (output on transitions) machines are finite-state transducers of equal power.</li>
+  </ul>
+</div>
+</article>
+</main>
+</body>
+</html>
