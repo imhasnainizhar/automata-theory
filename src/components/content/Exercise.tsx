@@ -7,7 +7,7 @@ export function Exercise({ n, level, q, children }: { n: number; level: 'easy' |
   const [open, setOpen] = useState(false);
   const id = useId();
   return (
-    <div className="ex">
+    <div className={`ex${open ? ' open' : ''}`}>
       <button type="button" className="ex-head" aria-expanded={open} aria-controls={id} onClick={() => setOpen((o) => !o)}>
         <span className="roman">{roman(n)}.</span>
         <span className="ex-q">
@@ -16,11 +16,12 @@ export function Exercise({ n, level, q, children }: { n: number; level: 'easy' |
         </span>
         <span className={`lvl ${level}`}>{level}</span>
       </button>
-      {open && (
-        <div className="ex-body" id={id}>
-          {children}
+      {/* always rendered so the height can animate; inert while closed */}
+      <div className="expand" data-open={open} id={id}>
+        <div className="expand-inner" inert={!open}>
+          <div className="ex-body">{children}</div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
