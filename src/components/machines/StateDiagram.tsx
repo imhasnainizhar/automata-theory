@@ -170,18 +170,24 @@ export function StateDiagram({ spec, active, hot, label }: { spec: MachineSpec; 
   useEffect(() => { if (size) svgRef.current?.setAttribute('data-ready', '1'); }, [size]);
 
   // drag to pan
-  const drag = useRef<{ id: number; x: number; y: number } | null>(null);
+  // Capture the pointer only once a real drag starts, and never for presses on the camera buttons:
+  // capturing on pointerdown would redirect the buttons' click events to the canvas.
+  const drag = useRef<{ id: number; x: number; y: number; moving: boolean } | null>(null);
   const onPointerDown = (e: React.PointerEvent) => {
     if (!zoomable || fitAll || e.button !== 0) return;
-    drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
-    try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
+    if ((e.target as Element).closest('.cam-tools')) return;
+    drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY, moving: false };
   };
   const onPointerMove = (e: React.PointerEvent) => {
     const d = drag.current;
     if (!d || d.id !== e.pointerId || !size) return;
     const k = cam.current.w / size.cw;
+    if (!d.moving) {
+      if (Math.abs(e.clientX - d.x) + Math.abs(e.clientY - d.y) < 5) return;
+      d.moving = true;
+      try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
+    }
     const dx = (e.clientX - d.x) * k, dy = (e.clientY - d.y) * k;
-    if (follow && Math.abs(dx) + Math.abs(dy) < 3 * k) return;
     drag.current = { ...d, x: e.clientX, y: e.clientY };
     if (follow) setFollow(false);
     cancelAnimationFrame(raf.current);
