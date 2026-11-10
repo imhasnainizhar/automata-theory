@@ -1,0 +1,20 @@
+name: Improvement or new topic
+description: A clearer explanation, more exercises, a new interactive machine, or a missing topic
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to see?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why would it help learners?
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Contribution
+      options:
+        - label: I would like to write this myself (see CONTRIBUTING.md)

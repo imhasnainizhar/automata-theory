@@ -1,0 +1,33 @@
+name: Site or simulator bug
+description: Something on the website does not work or looks broken
+labels: ["bug"]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      placeholder: "https://imhasnainizhar.github.io/automata-theory/09-pda.html"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: For simulators, include the input string you typed.
+      placeholder: |
+        1. Open the palindrome PDA
+        2. Type 0110 and press "Find accepting run"
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs. actual
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      placeholder: "Firefox 140 on Windows / Safari on iPhone"

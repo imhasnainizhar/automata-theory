@@ -1,0 +1,24 @@
+name: Content error
+description: A mistake in a definition, proof, example, exercise or solution
+labels: ["content"]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Where?
+      description: Chapter and section (or paste the page URL with its #anchor).
+      placeholder: "Chapter 6 · Using the pumping lemma: it is a game"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong?
+      description: Quote the sentence or formula and explain the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: fix
+    attributes:
+      label: Suggested correction
+      description: Optional — a corrected statement, or a reference (book, page) that supports it.

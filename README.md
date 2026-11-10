@@ -1,6 +1,11 @@
 # Automata, A to Z
 
-An intuition-first course on **automata theory, formal languages, computability and complexity** — from "what is a string?" to the Halting Problem and P vs NP.
+[![Check site](https://github.com/imhasnainizhar/automata-theory/actions/workflows/check.yml/badge.svg)](https://github.com/imhasnainizhar/automata-theory/actions/workflows/check.yml)
+[![Code: MIT](https://img.shields.io/badge/code-MIT-blue.svg)](LICENSE)
+[![Content: CC BY 4.0](https://img.shields.io/badge/content-CC%20BY%204.0-lightgrey.svg)](LICENSE-CONTENT.md)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+An open-source, intuition-first course on **automata theory, formal languages, computability and complexity** — from "what is a string?" to the Halting Problem and P vs NP.
 
 **Read it online:** https://imhasnainizhar.github.io/automata-theory/
 
@@ -49,3 +54,20 @@ State diagrams are declared in HTML and rendered by `assets/automata.js`:
 `type` can be `dfa`, `nfa`, `pda` (labels `a,X→Y`), `tm` (labels `a→b,R` or `a,b→R`) or `static`. Parse trees use `<figure class="tree" data-tree="S[a S[ε] b]">`.
 
 Math is rendered with [KaTeX](https://katex.org/).
+
+Before sending changes, run the checker (Python 3, no dependencies). CI runs it on every push and pull request:
+
+```bash
+python scripts/check_site.py
+```
+
+## Contributing
+
+Found a mistake, have a clearer explanation, or want to add exercises or a new interactive machine? Contributions are very welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the writing style and diagram format, and [open an issue](https://github.com/imhasnainizhar/automata-theory/issues/new/choose) to report errors. Please follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## License
+
+- **Course content** (text, exercises, solutions, diagrams) — [CC BY 4.0](LICENSE-CONTENT.md): reuse it in your own courses and notes, with attribution.
+- **Code** (`assets/`, `scripts/`, workflows) — [MIT](LICENSE).
+
+Notation follows Michael Sipser’s *Introduction to the Theory of Computation*; all text and examples here are original.
