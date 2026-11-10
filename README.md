@@ -1,8 +1,6 @@
 # WhatAutomata
 
 [![Check](https://github.com/imhasnainizhar/automata-theory/actions/workflows/check.yml/badge.svg)](https://github.com/imhasnainizhar/automata-theory/actions/workflows/check.yml)
-[![Code: MIT](https://img.shields.io/badge/code-MIT-blue.svg)](LICENSE)
-[![Content: CC BY 4.0](https://img.shields.io/badge/content-CC%20BY%204.0-lightgrey.svg)](LICENSE-CONTENT.md)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 **Learn automata theory by playing with machines.** WhatAutomata is an open-source, intuition-first course that teaches you the four classical machines (finite, pushdown, linear-bounded and Turing) by letting you run them in the browser, and connects each one to the class of formal languages it recognises.
